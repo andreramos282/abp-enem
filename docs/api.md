@@ -2,8 +2,12 @@
 
 Base em desenvolvimento: `http://127.0.0.1:8000` · Documentação interativa: `/docs`
 
-> Enquanto `USAR_MOCK=true`, as respostas são **simuladas** (campo `"modelo": "mock"`).
-> O formato é o definitivo: quando o modelo real entrar, só os valores mudam.
+> Sem modelo treinado em `models/`, as respostas são **simuladas** (campo `"modelo": "mock"`).
+> Com o modelo, `"modelo"` traz a versão (ex.: `"mlp-20261120"`). O formato é o mesmo nos dois casos.
+>
+> Com o modelo real, os **fatores** mostram quanto cada característica muda a probabilidade em relação ao
+> perfil mais comum do treino, e `/api/municipios/analytics` usa a amostra do ENEM 2023 (`404` se o
+> município não tiver alunos na amostra).
 
 Os códigos (`"C"`, `2`...) seguem o dicionário dos microdados do ENEM 2023.
 O front não deve fixar esses valores no código: busque-os em `GET /api/opcoes`.
@@ -109,4 +113,5 @@ Resposta:
 ## Erros
 | Código | Quando |
 |---|---|
+| `404` | `/api/municipios/analytics` sem alunos do município na amostra (só com o modelo real) |
 | `422` | Campo faltando, valor fora das opções, UF inválida, campo extra (ex.: uma nota) ou idioma diferente de `pt`/`en` |

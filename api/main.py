@@ -8,8 +8,9 @@ from __future__ import annotations
 
 import os
 from contextlib import asynccontextmanager
+from pathlib import Path
 
-from fastapi import FastAPI, Query
+from fastapi import FastAPI, HTTPException, Query
 from fastapi.middleware.cors import CORSMiddleware
 
 from .opcoes import montar_opcoes
@@ -18,13 +19,21 @@ from .servico import criar_preditor
 from .traducoes import Idioma
 
 
-def _usar_mock() -> bool:
-    return os.getenv("USAR_MOCK", "true").strip().lower() not in {"false", "0", "nao", "não"}
+RAIZ = Path(__file__).resolve().parent.parent
+
+
+def _modo() -> str:
+    modo = os.getenv("MODO_PREDITOR", "auto").strip().lower()
+    return modo if modo in {"auto", "mock", "modelo"} else "auto"
 
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    app.state.preditor = criar_preditor(usar_mock=_usar_mock())
+    app.state.preditor = criar_preditor(
+        _modo(),
+        pasta_modelo=Path(os.getenv("PASTA_MODELO", RAIZ / "models")),
+        caminho_amostra=Path(os.getenv("CAMINHO_AMOSTRA", RAIZ / "data" / "amostra_enem_2023.parquet")),
+    )
     app.state.opcoes = {"pt": montar_opcoes("pt"), "en": montar_opcoes("en")}
     yield
 
@@ -64,4 +73,7 @@ def prever(perfil: PerfilAluno, idioma: Idioma = IdiomaQuery) -> Previsao:
 
 @app.post("/api/municipios/analytics", response_model=AnaliseMunicipio)
 def analisar_municipio(requisicao: MunicipioRequisicao) -> AnaliseMunicipio:
-    return app.state.preditor.analisar_municipio(requisicao.municipio.strip(), requisicao.uf)
+    try:
+        return app.state.preditor.analisar_municipio(requisicao.municipio.strip(), requisicao.uf)
+    except LookupError as erro:
+        raise HTTPException(status_code=404, detail=str(erro)) from erro

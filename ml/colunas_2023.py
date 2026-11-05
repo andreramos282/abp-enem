@@ -37,6 +37,10 @@ BENS = [f"Q{n:03d}" for n in range(7, 24)]
 # Usadas só na análise de viés. NUNCA entram como entrada do modelo.
 VARIAVEIS_ANALISE_VIES = {"cor_raca": "TP_COR_RACA", "sexo": "TP_SEXO"}
 
+# Identificação da escola e do município (painel do mapa). Não entram no modelo.
+# CO_ESCOLA pode não existir em todos os anos; o código trata a ausência.
+VARIAVEIS_CONTEXTO = {"municipio_escola": "NO_MUNICIPIO_ESC", "co_escola": "CO_ESCOLA"}
+
 # ---------------------------------------------------------------------------
 # Alvo e população
 # ---------------------------------------------------------------------------

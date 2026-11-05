@@ -5,14 +5,15 @@ uma regra simples e determinística que devolve respostas no formato final,
 para o front-end já poder ser desenvolvido. Os valores NÃO vêm de modelo
 treinado e não devem ser usados como resultado do projeto.
 
-Para ligar o modelo real, implemente `PreditorModelo` (carregando
-models/pipeline.pkl) e defina USAR_MOCK=false.
+Quando existe models/pipeline.pkl (gerado por `python -m ml.treinar`), a API
+usa o `PreditorModelo` (api/modelo.py). Ver a variável MODO_PREDITOR no .env.example.
 """
 
 from __future__ import annotations
 
 import hashlib
 import math
+from pathlib import Path
 from typing import Protocol
 
 from ml import colunas_2023 as c
@@ -141,9 +142,13 @@ class PreditorMock:
         )
 
 
-def criar_preditor(usar_mock: bool = True) -> Preditor:
-    if usar_mock:
+def criar_preditor(modo: str = "auto", pasta_modelo: Path = Path("models"), caminho_amostra: Path | None = None) -> Preditor:
+    """modo: "mock" (dados simulados), "modelo" (exige models/pipeline.pkl) ou "auto" (modelo se existir)."""
+    existe_modelo = (pasta_modelo / "pipeline.pkl").is_file() and (pasta_modelo / "metadados.json").is_file()
+    if modo == "mock" or (modo == "auto" and not existe_modelo):
         return PreditorMock()
-    raise NotImplementedError(
-        "O modelo real ainda não foi integrado. Defina USAR_MOCK=true até a Sprint 3."
-    )
+    if not existe_modelo:
+        raise RuntimeError(f"Modelo não encontrado em {pasta_modelo}/. Rode: python -m ml.treinar")
+    from .modelo import PreditorModelo
+
+    return PreditorModelo(pasta_modelo, caminho_amostra)
