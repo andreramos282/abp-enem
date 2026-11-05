@@ -1,4 +1,4 @@
-# ABP ENEM – Predição de risco de desempenho
+# EduPredict AI – Predição de risco de desempenho no ENEM
 
 Projeto ABP do 5º semestre de DSM (FATEC Jacareí).
 
@@ -51,6 +51,18 @@ Acesse `http://127.0.0.1:8000/docs` para testar os endpoints no navegador.
 
 Enquanto o modelo não estiver pronto, a API responde com **dados simulados** (`USAR_MOCK=true`), no formato definitivo. Os valores do mock não são resultados do projeto.
 
+## Como rodar o front-end
+
+Requer Node.js 20+.
+
+```bash
+cd web
+npm install
+npm run dev   # sobe o front (http://localhost:5173) e a API juntos
+```
+
+Para exibir o mapa, copie `.env.example` para `.env` na raiz e coloque seu token público do Mapbox. Detalhes em [`web/README.md`](web/README.md).
+
 ### Testes
 
 ```bash
@@ -70,7 +82,7 @@ Os testes também rodam automaticamente a cada pull request (GitHub Actions).
 
 - [x] Estrutura do repositório e contrato da API
 - [x] API com respostas simuladas (mock)
-- [ ] Front-end consumindo a API (mapa + tela "Nova análise")
+- [x] Front-end responsivo consumindo a API (mapa, "Nova análise" e resultado)
 - [ ] Amostra limpa do ENEM 2023 e EDA
 - [ ] Modelos baseline e modelo final
 - [ ] Integração do modelo real na API

@@ -9,12 +9,13 @@ from __future__ import annotations
 import os
 from contextlib import asynccontextmanager
 
-from fastapi import FastAPI
+from fastapi import FastAPI, Query
 from fastapi.middleware.cors import CORSMiddleware
 
 from .opcoes import montar_opcoes
 from .schemas import AnaliseMunicipio, MunicipioRequisicao, OpcoesFormulario, PerfilAluno, Previsao
 from .servico import criar_preditor
+from .traducoes import Idioma
 
 
 def _usar_mock() -> bool:
@@ -24,7 +25,7 @@ def _usar_mock() -> bool:
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     app.state.preditor = criar_preditor(usar_mock=_usar_mock())
-    app.state.opcoes = montar_opcoes()
+    app.state.opcoes = {"pt": montar_opcoes("pt"), "en": montar_opcoes("en")}
     yield
 
 
@@ -48,14 +49,17 @@ def health() -> dict[str, str]:
     return {"status": "ok", "modelo": app.state.preditor.nome}
 
 
+IdiomaQuery = Query("pt", description="Idioma dos textos da resposta: pt ou en.")
+
+
 @app.get("/api/opcoes", response_model=OpcoesFormulario)
-def opcoes() -> OpcoesFormulario:
-    return app.state.opcoes
+def opcoes(idioma: Idioma = IdiomaQuery) -> OpcoesFormulario:
+    return app.state.opcoes[idioma]
 
 
 @app.post("/api/prever", response_model=Previsao)
-def prever(perfil: PerfilAluno) -> Previsao:
-    return app.state.preditor.prever(perfil)
+def prever(perfil: PerfilAluno, idioma: Idioma = IdiomaQuery) -> Previsao:
+    return app.state.preditor.prever(perfil, idioma)
 
 
 @app.post("/api/municipios/analytics", response_model=AnaliseMunicipio)

@@ -8,6 +8,9 @@ Base em desenvolvimento: `http://127.0.0.1:8000` · Documentação interativa: `
 Os códigos (`"C"`, `2`...) seguem o dicionário dos microdados do ENEM 2023.
 O front não deve fixar esses valores no código: busque-os em `GET /api/opcoes`.
 
+**Idioma:** `GET /api/opcoes` e `POST /api/prever` aceitam `?idioma=pt` (padrão) ou `?idioma=en`.
+Só os textos mudam (rótulos e descrições dos fatores); códigos e números são os mesmos nos dois idiomas.
+
 ---
 
 ## `GET /api/health`
@@ -15,7 +18,7 @@ O front não deve fixar esses valores no código: busque-os em `GET /api/opcoes`
 { "status": "ok", "modelo": "mock" }
 ```
 
-## `GET /api/opcoes`
+## `GET /api/opcoes?idioma=pt`
 Lista os campos do formulário "Nova análise" com suas opções.
 ```json
 {
@@ -32,7 +35,7 @@ Lista os campos do formulário "Nova análise" com suas opções.
 }
 ```
 
-## `POST /api/prever`
+## `POST /api/prever?idioma=pt`
 Estima o risco de um aluno ficar no **quartil inferior** de desempenho no ENEM.
 **Nenhuma nota é enviada.** Campos extras são rejeitados (`422`).
 
@@ -106,4 +109,4 @@ Resposta:
 ## Erros
 | Código | Quando |
 |---|---|
-| `422` | Campo faltando, valor fora das opções, UF inválida ou campo extra (ex.: uma nota) |
+| `422` | Campo faltando, valor fora das opções, UF inválida, campo extra (ex.: uma nota) ou idioma diferente de `pt`/`en` |
