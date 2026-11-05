@@ -1,8 +1,8 @@
-# Front-end – EducaRadar
+# Front-end – EduPredict AI
 
 React + TypeScript + Vite + Tailwind CSS + Mapbox, baseado no protótipo do Figma. Layout responsivo: menu lateral no computador e navegação inferior no celular.
 
-O mapa, a busca de municípios e a integração com o IBGE foram adaptados do protótipo **EduPredict AI** ([jvrb/edupredict_ai](https://github.com/jvrb/edupredict_ai)), assim como a ideia de alternar idioma e tema.
+O mapa, a busca de municípios e a integração com o IBGE foram adaptados do primeiro protótipo do projeto ([jvrb/edupredict_ai](https://github.com/jvrb/edupredict_ai)), assim como a ideia de alternar idioma e tema.
 
 ## Idioma e tema
 

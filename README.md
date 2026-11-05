@@ -1,4 +1,4 @@
-# ABP ENEM – Predição de risco de desempenho
+# EduPredict AI – Predição de risco de desempenho no ENEM
 
 Projeto ABP do 5º semestre de DSM (FATEC Jacareí).
 

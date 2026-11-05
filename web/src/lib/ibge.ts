@@ -1,5 +1,5 @@
 // Municípios e malhas territoriais da API pública do IBGE.
-// Adaptado do protótipo EduPredict AI.
+// Adaptado do primeiro protótipo do projeto (jvrb/edupredict_ai).
 import type { Feature, FeatureCollection, Geometry, Position } from 'geojson'
 
 export interface Municipio {

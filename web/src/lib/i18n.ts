@@ -4,7 +4,7 @@
 export type Idioma = 'pt' | 'en'
 
 const pt = {
-  marca: 'EducaRadar',
+  marca: 'EduPredict AI',
   menu: 'MENU',
   menuPrincipal: 'Menu principal',
   nav: {
@@ -179,7 +179,7 @@ const pt = {
 export type Textos = typeof pt
 
 const en: Textos = {
-  marca: 'EducaRadar',
+  marca: 'EduPredict AI',
   menu: 'MENU',
   menuPrincipal: 'Main menu',
   nav: {

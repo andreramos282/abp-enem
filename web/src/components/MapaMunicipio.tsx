@@ -12,7 +12,7 @@ const CAMADA_PREENCHIMENTO = 'limite-municipio-preenchimento'
 const estilo = (tema: Tema) => `mapbox://styles/mapbox/${tema === 'escuro' ? 'dark' : 'light'}-v11`
 const cor = (tema: Tema) => (tema === 'escuro' ? '#818cf8' : '#4f46e5')
 
-// Mapa do Mapbox com o limite oficial do município (adaptado do protótipo EduPredict AI).
+// Mapa do Mapbox com o limite oficial do município (adaptado do primeiro protótipo, jvrb/edupredict_ai).
 export function MapaMunicipio({ malha, nome }: { malha: Malha | null; nome?: string }) {
   const { tema, t } = usePreferencias()
   const container = useRef<HTMLDivElement>(null)
