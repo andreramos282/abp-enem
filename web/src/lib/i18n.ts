@@ -62,7 +62,10 @@ const pt = {
     buscarExemplo: 'Buscar município (ex.: Jacareí)',
     limpar: 'Limpar busca',
     kpiRisco: 'Risco previsto',
-    kpiRiscoDetalhe: 'dos alunos avaliados',
+    kpiRiscoDetalhe: 'previstos no quartil inferior (média nacional: 25%)',
+    semEscolas: 'base sem código de escola',
+    semEscolasTexto:
+      'Os microdados do ENEM 2023 não identificam a escola de cada aluno, então esta análise mostra só o município. A visão por escola volta quando usarmos uma base com o código da escola.',
     kpiSelecione: 'Selecione um município',
     kpiAlunos: 'Alunos avaliados',
     kpiMedia: 'Média geral das notas',
@@ -240,7 +243,10 @@ const en: Textos = {
     buscarExemplo: 'Search municipality (e.g., Jacareí)',
     limpar: 'Clear search',
     kpiRisco: 'Predicted risk',
-    kpiRiscoDetalhe: 'of evaluated students',
+    kpiRiscoDetalhe: 'predicted in the bottom quartile (national average: 25%)',
+    semEscolas: 'no school code in this data',
+    semEscolasTexto:
+      "The 2023 ENEM microdata does not identify each student's school, so this view shows only the municipality. The school view returns when we use data with the school code.",
     kpiSelecione: 'Select a municipality',
     kpiAlunos: 'Evaluated students',
     kpiMedia: 'Overall average score',

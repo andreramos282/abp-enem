@@ -23,6 +23,24 @@ Fora do escopo atual: hábitos de estudo e evasão (não existem no questionári
 
 Todos os nomes de colunas do INEP ficam em [`ml/colunas_2023.py`](ml/colunas_2023.py). Para usar outro ano, crie um arquivo equivalente.
 
+## Resultados com os dados reais (ENEM 2023)
+
+Treino em 5 de novembro de 2026 com uma amostra estratificada de **399.998 concluintes**, tirada de 1.008.062 concluintes válidos.
+
+| Modelo | AUC (teste) | F1 | Recall |
+| --- | --- | --- | --- |
+| Regressão logística (baseline) | 0,755 | 0,518 | 69% |
+| Árvore de decisão | 0,747 | 0,513 | 76% |
+| Random forest | 0,760 | 0,523 | 72% |
+| **Gradient boosting** (escolhido) | **0,762** | 0,525 | 71% |
+| Rede neural (MLP) | 0,760 | 0,521 | 67% |
+
+- **Corte do quartil inferior:** média das 5 notas abaixo de **481,0**.
+- **Teste sem a região Nordeste:** AUC 0,772. O modelo generaliza para uma região que não viu no treino.
+- **Análise de viés:** mesmo sem cor/raça e sexo como entrada, o modelo aponta mais falsos positivos entre alunos pretos (46%) e pardos (45%) do que entre brancos (21%), e encontra menos alunos brancos que estão de fato em risco (recall de 55% contra 74–78%). Isso acompanha as diferenças reais de desempenho (risco real de 16% entre brancos e 32–34% entre pretos e pardos), mas é uma limitação a declarar: o resultado deve apoiar a decisão pedagógica, nunca rotular o aluno.
+
+Detalhes em [`models/relatorio_treino.md`](models/relatorio_treino.md) e análise exploratória em [`docs/eda/`](docs/eda/README.md).
+
 ## Estrutura
 
 ```
@@ -108,8 +126,9 @@ Veja o [CONTRIBUTING.md](CONTRIBUTING.md): preparação do ambiente, padrão de 
 - [x] API com respostas simuladas (mock)
 - [x] Front-end responsivo consumindo a API (mapa, "Nova análise" e resultado)
 - [x] Script de amostragem do ENEM 2023
-- [ ] Rodar a amostragem com os microdados reais e fazer a EDA
+- [x] Amostragem com os microdados reais e EDA (`python -m ml.eda`)
 - [x] Script de treino: baselines, MLP, GridSearchCV, limiar, viés e teste por região
-- [ ] Treinar com os dados reais e escolher o modelo final
+- [x] Treino com os dados reais (AUC 0,76)
+- [ ] Decidir o modelo final (gradient boosting ou MLP) e compartilhar o `pipeline.pkl` com o grupo
 - [x] Integração do modelo real na API (com explicação dos fatores)
 - [ ] Análise de viés e explicabilidade

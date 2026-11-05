@@ -98,6 +98,8 @@ export function VisaoGeral() {
 
   const stats = analise?.estatisticas_gerais
   const escolasAltoRisco = analise?.escolas.filter((e) => e.status_alerta === 'ALTO_RISCO').length ?? 0
+  // Algumas bases (ex.: ENEM 2023) não identificam a escola: aí não há análise por escola.
+  const temEscolas = Boolean(analise && analise.escolas.length > 0)
 
   return (
     <>
@@ -206,7 +208,8 @@ export function VisaoGeral() {
         />
         <Kpi
           titulo={t.visao.kpiEscolas}
-          valor={stats ? t.visao.deTotal(escolasAltoRisco, stats.total_escolas_unicas) : '—'}
+          valor={stats && temEscolas ? t.visao.deTotal(escolasAltoRisco, stats.total_escolas_unicas) : '—'}
+          detalhe={stats && !temEscolas ? t.visao.semEscolas : undefined}
           tom={escolasAltoRisco > 0 ? 'alto' : 'neutro'}
           icone={<School className="size-4" aria-hidden />}
         />
@@ -219,7 +222,13 @@ export function VisaoGeral() {
         </Cartao>
         <Cartao className="p-5 sm:p-6 lg:col-span-2">
           <TituloCartao titulo={t.visao.distribuicaoTitulo} subtitulo={t.visao.distribuicaoSub} />
-          {analise ? <DistribuicaoRisco escolas={analise.escolas} /> : <SemMunicipio carregando={carregando} />}
+          {!analise ? (
+            <SemMunicipio carregando={carregando} />
+          ) : temEscolas ? (
+            <DistribuicaoRisco escolas={analise.escolas} />
+          ) : (
+            <p className="mt-6 text-sm leading-relaxed text-suave">{t.visao.semEscolasTexto}</p>
+          )}
         </Cartao>
       </div>
 
@@ -233,7 +242,7 @@ export function VisaoGeral() {
       )}
 
       {/* Escolas */}
-      {analise && (
+      {analise && temEscolas && (
         <Cartao className="overflow-hidden">
           <div className="p-5 sm:p-6">
             <TituloCartao
