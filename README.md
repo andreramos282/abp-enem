@@ -43,9 +43,12 @@ Requer Python 3.11+.
 ```bash
 python -m venv .venv
 # Windows: .venv\Scripts\activate   |   Linux/Mac: source .venv/bin/activate
-pip install -r requirements.txt
+pip install -r requirements-dev.txt   # só para rodar a API: requirements.txt
+cp .env.example .env                  # no Windows: copy .env.example .env
 uvicorn api.main:app --reload --port 8000
 ```
+
+A API lê as configurações do arquivo `.env` da raiz (variáveis definidas no terminal têm prioridade).
 
 Acesse `http://127.0.0.1:8000/docs` para testar os endpoints no navegador.
 
@@ -81,20 +84,23 @@ npm run dev   # sobe o front (http://localhost:5173) e a API juntos
 
 Para exibir o mapa, copie `.env.example` para `.env` na raiz e coloque seu token público do Mapbox. Detalhes em [`web/README.md`](web/README.md).
 
-### Testes
+### Testes e verificação de estilo
 
 ```bash
+# Python
 pytest
+ruff check . && ruff format --check .
+
+# Front-end (dentro de web/)
+npm test
+npm run lint && npm run format:check
 ```
 
-Os testes também rodam automaticamente a cada pull request (GitHub Actions).
+Tudo isso roda automaticamente a cada pull request (GitHub Actions).
 
 ## Como contribuir
 
-1. Crie uma branch a partir da `main`: `git checkout -b feat/nome-da-tarefa`
-2. Faça commits pequenos e com mensagens claras.
-3. Abra um pull request e peça revisão de outra pessoa do grupo.
-4. Só faça merge com os testes passando.
+Veja o [CONTRIBUTING.md](CONTRIBUTING.md): preparação do ambiente, padrão de branches e commits, verificações antes do pull request e regras do código.
 
 ## Roadmap
 

@@ -1,0 +1,5 @@
+# Normaliza quebras de linha (evita diffs enormes entre Windows e Linux).
+* text=auto eol=lf
+*.pkl binary
+*.parquet binary
+*.zip binary

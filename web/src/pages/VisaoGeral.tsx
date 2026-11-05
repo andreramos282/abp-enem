@@ -9,22 +9,12 @@ import {
   type NivelRisco,
 } from '../lib/api'
 import { carregarMalha, carregarMunicipios, filtrarMunicipios, type Malha, type Municipio } from '../lib/ibge'
-import { usePreferencias } from '../lib/preferencias'
+import { usePreferencias } from '../lib/usePreferencias'
 import { navegar } from '../lib/rotas'
 import { CabecalhoPagina } from '../components/Layout'
 import { MapaMunicipio } from '../components/MapaMunicipio'
-import {
-  AvisoMock,
-  BadgeRisco,
-  Botao,
-  COR_NIVEL,
-  Carregando,
-  Cartao,
-  Kpi,
-  MensagemErro,
-  TituloCartao,
-  cx,
-} from '../components/ui'
+import { AvisoMock, BadgeRisco, Botao, Carregando, Cartao, Kpi, MensagemErro, TituloCartao } from '../components/ui'
+import { COR_NIVEL, cx } from '../lib/estilos'
 
 const ESCOLAS_INICIAIS = 8
 
@@ -127,7 +117,10 @@ export function VisaoGeral() {
         <label htmlFor="busca-municipio" className="sr-only">
           {t.visao.buscar}
         </label>
-        <Search className="pointer-events-none absolute left-4 top-1/2 size-5 -translate-y-1/2 text-suave" aria-hidden />
+        <Search
+          className="pointer-events-none absolute left-4 top-1/2 size-5 -translate-y-1/2 text-suave"
+          aria-hidden
+        />
         <input
           id="busca-municipio"
           type="text"
@@ -232,7 +225,10 @@ export function VisaoGeral() {
 
       {erroAnalise && (
         <div className="mb-6">
-          <MensagemErro texto={erroAnalise} onTentarNovamente={selecionado ? () => void selecionar(selecionado) : undefined} />
+          <MensagemErro
+            texto={erroAnalise}
+            onTentarNovamente={selecionado ? () => void selecionar(selecionado) : undefined}
+          />
         </div>
       )}
 
@@ -330,7 +326,9 @@ function TabelaEscolas({ escolas }: { escolas: EscolaResumo[] }) {
               <tr key={e.co_escola} className="border-t border-borda">
                 <td className="px-6 py-3.5 font-medium">{e.co_escola}</td>
                 <td className="px-4 py-3.5 text-right tabular-nums text-texto-2">{e.total_alunos_escola}</td>
-                <td className="px-4 py-3.5 text-right tabular-nums text-texto-2">{formatarNumero(e.media_escola, 1)}</td>
+                <td className="px-4 py-3.5 text-right tabular-nums text-texto-2">
+                  {formatarNumero(e.media_escola, 1)}
+                </td>
                 <td className="px-4 py-3.5">
                   <BarraPercentual valor={e.percentual_risco_escola} />
                 </td>

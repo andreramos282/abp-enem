@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from 'react'
 import type { Map as MapboxMap } from 'mapbox-gl'
 import { MapPinned } from 'lucide-react'
 import { calcularLimites, type Malha } from '../lib/ibge'
-import { usePreferencias, type Tema } from '../lib/preferencias'
+import { usePreferencias, type Tema } from '../lib/usePreferencias'
 
 const TOKEN = import.meta.env.VITE_MAPBOX_ACCESS_TOKEN
 const FONTE = 'limite-municipio'

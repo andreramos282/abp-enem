@@ -12,12 +12,12 @@ O mapa, a busca de municípios e a integração com o IBGE foram adaptados do pr
 
 ## Telas
 
-| Rota | Tela |
-|---|---|
-| `#/login` | Login (visual; ainda sem autenticação) |
-| `#/visao-geral` | Busca de município (IBGE), mapa, indicadores e escolas por risco |
+| Rota             | Tela                                                               |
+| ---------------- | ------------------------------------------------------------------ |
+| `#/login`        | Login (visual; ainda sem autenticação)                             |
+| `#/visao-geral`  | Busca de município (IBGE), mapa, indicadores e escolas por risco   |
 | `#/nova-analise` | Formulário do perfil do aluno (opções vindas de `GET /api/opcoes`) |
-| `#/resultado` | Probabilidade de risco, fatores e intervenções recomendadas |
+| `#/resultado`    | Probabilidade de risco, fatores e intervenções recomendadas        |
 
 ## Como rodar
 
@@ -39,6 +39,16 @@ VITE_MAPBOX_ACCESS_TOKEN=pk....
 
 Sem o token, o resto do sistema funciona normalmente e o mapa mostra um aviso.
 
+## Comandos
+
+| Comando          | O que faz                                     |
+| ---------------- | --------------------------------------------- |
+| `npm run dev`    | front + API em modo desenvolvimento           |
+| `npm test`       | testes (Vitest)                               |
+| `npm run lint`   | verificação do código (ESLint)                |
+| `npm run format` | formata o código (Prettier)                   |
+| `npm run build`  | verifica os tipos e gera a versão de produção |
+
 ## Estrutura
 
 ```
@@ -54,9 +64,13 @@ src/
     ibge.ts            municípios e malhas do IBGE
     rotas.ts           roteamento por hash
     armazenamento.ts   última análise (sessionStorage)
+    estilos.ts         utilitário de classes e cores por nível de risco
+    idioma-atual.ts    idioma atual fora do React (números e API)
     i18n.ts            textos em português e inglês
     perfil.ts          converte o formulário no perfil enviado à API
-    preferencias.tsx   idioma e tema (salvos no navegador)
+    preferencias.tsx   provedor de idioma e tema (salvos no navegador)
+    usePreferencias.ts hook para ler idioma, tema e textos
+    *.test.ts          testes (Vitest)
   pages/               Login, VisaoGeral, NovaAnalise, Resultado
 ```
 

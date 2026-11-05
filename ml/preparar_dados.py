@@ -58,7 +58,9 @@ def filtrar_bloco(bloco: pd.DataFrame) -> pd.DataFrame:
 def ler_populacao(caminho: Path, tamanho_bloco: int = 250_000, encoding: str = "latin-1") -> pd.DataFrame:
     cabecalho = pd.read_csv(caminho, sep=";", encoding=encoding, nrows=0).columns.tolist()
     usar = colunas_para_ler(cabecalho)
-    texto = {col: "string" for col in usar if col.startswith("Q") or col in {"SG_UF_ESC", "TP_SEXO", "NO_MUNICIPIO_ESC"}}
+    texto = {
+        col: "string" for col in usar if col.startswith("Q") or col in {"SG_UF_ESC", "TP_SEXO", "NO_MUNICIPIO_ESC"}
+    }
     blocos = []
     total_lido = 0
     for bloco in pd.read_csv(caminho, sep=";", encoding=encoding, usecols=usar, dtype=texto, chunksize=tamanho_bloco):
@@ -95,7 +97,9 @@ def salvar(df: pd.DataFrame, caminho: Path) -> None:
 def carregar(caminho: Path) -> pd.DataFrame:
     if caminho.suffix == ".parquet":
         return pd.read_parquet(caminho)
-    return pd.read_csv(caminho, dtype={col: "string" for col in [*c.BENS, "Q001", "Q002", "Q003", "Q004", "Q006", "Q024", "Q025"]})
+    return pd.read_csv(
+        caminho, dtype={col: "string" for col in [*c.BENS, "Q001", "Q002", "Q003", "Q004", "Q006", "Q024", "Q025"]}
+    )
 
 
 def main() -> None:

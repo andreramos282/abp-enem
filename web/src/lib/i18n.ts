@@ -146,15 +146,18 @@ const pt = {
     recomendacoes: {
       computador: {
         titulo: 'Acesso a computadores na escola',
-        descricao: 'Liberar o laboratório de informática no contraturno para simulados e plataformas de estudo on-line.',
+        descricao:
+          'Liberar o laboratório de informática no contraturno para simulados e plataformas de estudo on-line.',
       },
       internet: {
         titulo: 'Conectividade para estudo',
-        descricao: 'Indicar programas de internet para estudantes e disponibilizar Wi-Fi da escola fora do horário de aula.',
+        descricao:
+          'Indicar programas de internet para estudantes e disponibilizar Wi-Fi da escola fora do horário de aula.',
       },
       renda: {
         titulo: 'Apoio socioeconômico',
-        descricao: 'Encaminhar a família a programas de assistência e garantir isenção de taxas e transporte para a prova.',
+        descricao:
+          'Encaminhar a família a programas de assistência e garantir isenção de taxas e transporte para a prova.',
       },
       familia: {
         titulo: 'Acompanhamento com a família',
@@ -252,8 +255,7 @@ const en: Textos = {
     analisando: 'Analyzing municipality…',
     vazio: 'Search for a municipality above to see how its schools are distributed.',
     escolasTitulo: 'Priority schools for intervention',
-    escolasSub: (n: number, municipio: string, uf: string) =>
-      `${n} schools in ${municipio} – ${uf}, sorted by risk`,
+    escolasSub: (n: number, municipio: string, uf: string) => `${n} schools in ${municipio} – ${uf}, sorted by risk`,
     colEscola: 'SCHOOL (INEP CODE)',
     colAlunos: 'STUDENTS',
     colMedia: 'OBSERVED AVERAGE',
@@ -309,7 +311,8 @@ const en: Textos = {
     deRisco: 'risk',
     explicacao: 'Estimated chance that the student falls in the bottom 25% of ENEM averages.',
     fatoresTitulo: 'What weighs most in this prediction',
-    fatoresSub: 'How much each characteristic changes the risk compared with the most common profile, in percentage points',
+    fatoresSub:
+      'How much each characteristic changes the risk compared with the most common profile, in percentage points',
     pp: 'p.p.',
     aumenta: 'Increases risk',
     reduz: 'Reduces risk',

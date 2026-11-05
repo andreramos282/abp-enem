@@ -1,0 +1,35 @@
+[project]
+name = "abp-enem"
+version = "0.1.0"
+description = "EduPredict AI – predição de risco de desempenho no ENEM"
+requires-python = ">=3.11"
+
+# Ruff: verificador e formatador de código Python.
+# Rodar:  ruff check .  |  ruff check . --fix  |  ruff format .
+[tool.ruff]
+line-length = 120
+target-version = "py311"
+extend-exclude = ["web", "data", "models", "notebooks"]
+
+[tool.ruff.lint]
+select = [
+    "E",   # erros de estilo (PEP 8)
+    "W",   # avisos de estilo
+    "F",   # erros lógicos (variável não usada, import faltando...)
+    "I",   # ordem dos imports
+    "B",   # bugs comuns
+    "UP",  # sintaxe moderna do Python
+    "SIM", # simplificações
+    "N",   # nomes (PEP 8)
+]
+ignore = [
+    "N803", # permitir X maiúsculo (convenção de ML: X = entradas)
+    "N806",
+]
+
+[tool.ruff.lint.isort]
+known-first-party = ["api", "ml", "tests"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["."]

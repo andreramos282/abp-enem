@@ -3,14 +3,23 @@ import { Check, Info, Lock } from 'lucide-react'
 import { buscarOpcoes, preverRisco, type Campo, type Perfil } from '../lib/api'
 import { salvarAnalise } from '../lib/armazenamento'
 import { montarPerfil, rotulosDoPerfil, type Valores } from '../lib/perfil'
-import { usePreferencias } from '../lib/preferencias'
+import { usePreferencias } from '../lib/usePreferencias'
 import { navegar } from '../lib/rotas'
 import { CabecalhoPagina } from '../components/Layout'
-import { Botao, CampoSelecao, Carregando, Cartao, MensagemErro, Segmentado, cx } from '../components/ui'
+import { Botao, CampoSelecao, Carregando, Cartao, MensagemErro, Segmentado } from '../components/ui'
+import { cx } from '../lib/estilos'
 
 // Campos de cada etapa. tipo_escola não aparece: é derivado da rede (ver lib/perfil.ts).
 const CAMPOS_POR_SECAO: Array<Array<keyof Perfil>> = [
-  ['renda_familiar', 'pessoas_residencia', 'escolaridade_mae', 'escolaridade_pai', 'ocupacao_mae', 'ocupacao_pai', 'faixa_etaria'],
+  [
+    'renda_familiar',
+    'pessoas_residencia',
+    'escolaridade_mae',
+    'escolaridade_pai',
+    'ocupacao_mae',
+    'ocupacao_pai',
+    'faixa_etaria',
+  ],
   ['rede_escola', 'localizacao_escola', 'uf_escola'],
   ['computador', 'internet'],
 ]

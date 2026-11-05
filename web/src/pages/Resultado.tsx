@@ -4,10 +4,11 @@ import { buscarOpcoes, formatarNumero, preverRisco, type Fator, type NivelRisco 
 import { lerAnalise, salvarAnalise, type UltimaAnalise } from '../lib/armazenamento'
 import type { Textos } from '../lib/i18n'
 import { rotulosDoPerfil } from '../lib/perfil'
-import { usePreferencias } from '../lib/preferencias'
+import { usePreferencias } from '../lib/usePreferencias'
 import { navegar } from '../lib/rotas'
 import { CabecalhoPagina } from '../components/Layout'
-import { AvisoMock, BadgeRisco, Botao, Cartao, TituloCartao, cx } from '../components/ui'
+import { AvisoMock, BadgeRisco, Botao, Cartao, TituloCartao } from '../components/ui'
+import { cx } from '../lib/estilos'
 
 const COR_MEDIDOR: Record<NivelRisco, string> = {
   alto: 'var(--color-risco-alto)',
@@ -109,7 +110,11 @@ export function Resultado() {
   const { previsao, rotulos } = analise
   const maiorImpacto = Math.max(...previsao.fatores.map((f) => Math.abs(f.impacto)), 1)
   const recomendacoes = recomendacoesPara(previsao.fatores)
-  const resumo = [rotulos.rede_escola && t.resultado.rede(rotulos.rede_escola), rotulos.renda_familiar, rotulos.uf_escola]
+  const resumo = [
+    rotulos.rede_escola && t.resultado.rede(rotulos.rede_escola),
+    rotulos.renda_familiar,
+    rotulos.uf_escola,
+  ]
     .filter(Boolean)
     .join(' · ')
 

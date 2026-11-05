@@ -1,0 +1,5 @@
+# Dependências de desenvolvimento: testes e verificação de estilo.
+-r requirements.txt
+pytest>=8
+httpx>=0.27
+ruff==0.16.9
