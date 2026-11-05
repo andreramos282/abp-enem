@@ -122,6 +122,10 @@ FATORES: dict[Idioma, dict[str, str]] = {
         "rede_escola": "Rede da escola: {valor}",
         "localizacao_escola": "Escola em área {valor}",
         "faixa_etaria": "Faixa etária: {valor}",
+        "ocupacao_mae": "Ocupação da mãe: {valor}",
+        "ocupacao_pai": "Ocupação do pai: {valor}",
+        "regiao": "Escola na região {valor}",
+        "bens": "Bens e conforto no domicílio",
     },
     "en": {
         "renda_per_capita": "Per capita income of about R$ {valor}",
@@ -134,7 +138,17 @@ FATORES: dict[Idioma, dict[str, str]] = {
         "rede_escola": "School network: {valor}",
         "localizacao_escola": "School in a {valor} area",
         "faixa_etaria": "Age group: {valor}",
+        "ocupacao_mae": "Mother's occupation: {valor}",
+        "ocupacao_pai": "Father's occupation: {valor}",
+        "regiao": "School in the {valor} region",
+        "bens": "Household goods and comfort",
     },
+}
+
+
+REGIOES: dict[Idioma, dict[str, str]] = {
+    "pt": {r: r for r in ["Norte", "Nordeste", "Centro-Oeste", "Sudeste", "Sul"]},
+    "en": {"Norte": "North", "Nordeste": "Northeast", "Centro-Oeste": "Central-West", "Sudeste": "Southeast", "Sul": "South"},
 }
 
 

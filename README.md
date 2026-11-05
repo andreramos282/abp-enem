@@ -17,7 +17,7 @@ Plataforma de inteligência educacional para secretarias de educação e escolas
 | Amostra | ~400 mil alunos, estratificada por região e tipo de escola, em Parquet, `random_state=42` |
 | Validação | 80/20 estratificado + GridSearchCV (5 folds) no treino · teste extra deixando uma região de fora |
 | Métricas | AUC (principal), F1 e recall da classe de risco |
-| Modelos | Regressão Logística (baseline), Árvore de Decisão, Random Forest, XGBoost e MLP |
+| Modelos | Regressão Logística (baseline), Árvore de Decisão, Random Forest, Gradient Boosting (HistGradientBoosting, no lugar do XGBoost para evitar outra dependência) e MLP |
 
 Fora do escopo atual: hábitos de estudo e evasão (não existem no questionário do ENEM). Possível extensão futura com os microdados do SAEB.
 
@@ -49,7 +49,25 @@ uvicorn api.main:app --reload --port 8000
 
 Acesse `http://127.0.0.1:8000/docs` para testar os endpoints no navegador.
 
-Enquanto o modelo não estiver pronto, a API responde com **dados simulados** (`USAR_MOCK=true`), no formato definitivo. Os valores do mock não são resultados do projeto.
+Se existir um modelo treinado em `models/pipeline.pkl`, a API usa o modelo. Senão, responde com **dados simulados** no formato definitivo (campo `"modelo": "mock"`), que não são resultados do projeto. Para forçar um dos dois, use `MODO_PREDITOR=mock` ou `MODO_PREDITOR=modelo` (ver `.env.example`).
+
+## Como gerar a amostra e treinar o modelo
+
+1. Baixe os microdados do ENEM 2023 e coloque o `MICRODADOS_ENEM_2023.csv` em `data/` (ver [`data/README.md`](data/README.md)).
+2. Gere a amostra (lê o arquivo em blocos; leva alguns minutos):
+   ```bash
+   python -m ml.preparar_dados data/MICRODADOS_ENEM_2023.csv
+   ```
+3. Treine e compare os modelos:
+   ```bash
+   python -m ml.treinar --teste-regiao Nordeste
+   # para salvar a rede neural mesmo que outro modelo tenha AUC maior:
+   python -m ml.treinar --escolher mlp
+   ```
+4. O resultado fica em `models/`: `pipeline.pkl` (modelo), `metadados.json` (corte, métricas, análise de viés) e `relatorio_treino.md` (tabelas prontas para o relatório da sprint).
+5. Reinicie a API: ela passa a usar o modelo treinado automaticamente.
+
+Para testar o fluxo sem os dados reais: `python -m tests.sintetico data/MICRODADOS_ENEM_2023_SINTETICO.csv` gera um arquivo falso no mesmo layout.
 
 ## Como rodar o front-end
 
@@ -83,7 +101,9 @@ Os testes também rodam automaticamente a cada pull request (GitHub Actions).
 - [x] Estrutura do repositório e contrato da API
 - [x] API com respostas simuladas (mock)
 - [x] Front-end responsivo consumindo a API (mapa, "Nova análise" e resultado)
-- [ ] Amostra limpa do ENEM 2023 e EDA
-- [ ] Modelos baseline e modelo final
-- [ ] Integração do modelo real na API
+- [x] Script de amostragem do ENEM 2023
+- [ ] Rodar a amostragem com os microdados reais e fazer a EDA
+- [x] Script de treino: baselines, MLP, GridSearchCV, limiar, viés e teste por região
+- [ ] Treinar com os dados reais e escolher o modelo final
+- [x] Integração do modelo real na API (com explicação dos fatores)
 - [ ] Análise de viés e explicabilidade
