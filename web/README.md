@@ -2,6 +2,14 @@
 
 React + TypeScript + Vite + Tailwind CSS + Mapbox, baseado no protótipo do Figma. Layout responsivo: menu lateral no computador e navegação inferior no celular.
 
+O mapa, a busca de municípios e a integração com o IBGE foram adaptados do protótipo **EduPredict AI** ([jvrb/edupredict_ai](https://github.com/jvrb/edupredict_ai)), assim como a ideia de alternar idioma e tema.
+
+## Idioma e tema
+
+- **Idioma:** português ou inglês (botões PT/EN). Os textos da interface ficam em `src/lib/i18n.ts`; os textos que vêm da API são pedidos com `?idioma=`.
+- **Tema:** claro ou escuro (botão de sol/lua). Na primeira visita segue o tema do sistema. As cores dos dois temas ficam em `src/index.css`.
+- As duas escolhas ficam salvas no navegador.
+
 ## Telas
 
 | Rota | Tela |
@@ -38,6 +46,7 @@ src/
   App.tsx              rotas
   components/
     Layout.tsx         menu lateral (PC) e navegação inferior (celular)
+    Preferencias.tsx   botões de idioma e tema
     MapaMunicipio.tsx  mapa Mapbox com o limite do município
     ui.tsx             botões, cartões, campos, selos de risco
   lib/
@@ -45,6 +54,9 @@ src/
     ibge.ts            municípios e malhas do IBGE
     rotas.ts           roteamento por hash
     armazenamento.ts   última análise (sessionStorage)
+    i18n.ts            textos em português e inglês
+    perfil.ts          converte o formulário no perfil enviado à API
+    preferencias.tsx   idioma e tema (salvos no navegador)
   pages/               Login, VisaoGeral, NovaAnalise, Resultado
 ```
 

@@ -6,8 +6,10 @@ import {
   nivelDaEscola,
   type AnaliseMunicipio,
   type EscolaResumo,
+  type NivelRisco,
 } from '../lib/api'
 import { carregarMalha, carregarMunicipios, filtrarMunicipios, type Malha, type Municipio } from '../lib/ibge'
+import { usePreferencias } from '../lib/preferencias'
 import { navegar } from '../lib/rotas'
 import { CabecalhoPagina } from '../components/Layout'
 import { MapaMunicipio } from '../components/MapaMunicipio'
@@ -15,6 +17,7 @@ import {
   AvisoMock,
   BadgeRisco,
   Botao,
+  COR_NIVEL,
   Carregando,
   Cartao,
   Kpi,
@@ -26,12 +29,13 @@ import {
 const ESCOLAS_INICIAIS = 8
 
 export function VisaoGeral() {
+  const { t } = usePreferencias()
   const [busca, setBusca] = useState('')
   const [municipios, setMunicipios] = useState<Municipio[]>([])
   const [sugestoes, setSugestoes] = useState<Municipio[]>([])
   const [listaAberta, setListaAberta] = useState(false)
   const [destaque, setDestaque] = useState(0)
-  const [erroBusca, setErroBusca] = useState('')
+  const [erroBusca, setErroBusca] = useState(false)
   const [selecionado, setSelecionado] = useState<Municipio | null>(null)
   const [malha, setMalha] = useState<Malha | null>(null)
   const [analise, setAnalise] = useState<AnaliseMunicipio | null>(null)
@@ -44,7 +48,7 @@ export function VisaoGeral() {
     if (busca.trim().length < 2 || municipios.length > 0) return
     carregarMunicipios()
       .then(setMunicipios)
-      .catch((e: unknown) => setErroBusca(e instanceof Error ? e.message : 'Erro ao buscar municípios.'))
+      .catch(() => setErroBusca(true))
   }, [busca, municipios.length])
 
   useEffect(() => {
@@ -70,7 +74,7 @@ export function VisaoGeral() {
       const resultado = await analisarMunicipio(municipio.nome, municipio.uf)
       if (id === requisicao.current) setAnalise(resultado)
     } catch (e) {
-      if (id === requisicao.current) setErroAnalise(e instanceof Error ? e.message : 'Erro ao analisar o município.')
+      if (id === requisicao.current) setErroAnalise(e instanceof Error ? e.message : t.visao.erroAnalise)
     } finally {
       if (id === requisicao.current) setCarregando(false)
     }
@@ -108,12 +112,12 @@ export function VisaoGeral() {
   return (
     <>
       <CabecalhoPagina
-        titulo="Visão geral"
-        subtitulo="Busque um município para ver o risco de baixo desempenho no ENEM por escola."
+        titulo={t.visao.titulo}
+        subtitulo={t.visao.subtitulo}
         acoes={
           <Botao onClick={() => navegar('nova-analise')} className="w-full sm:w-auto">
             <ClipboardPlus className="size-4" aria-hidden />
-            Nova análise
+            {t.nav.novaAnalise}
           </Botao>
         }
       />
@@ -121,7 +125,7 @@ export function VisaoGeral() {
       {/* Busca */}
       <div className="relative mb-6">
         <label htmlFor="busca-municipio" className="sr-only">
-          Buscar município
+          {t.visao.buscar}
         </label>
         <Search className="pointer-events-none absolute left-4 top-1/2 size-5 -translate-y-1/2 text-suave" aria-hidden />
         <input
@@ -132,24 +136,24 @@ export function VisaoGeral() {
           aria-controls="sugestoes-municipio"
           aria-autocomplete="list"
           autoComplete="off"
-          placeholder="Buscar município (ex.: Jacareí)"
+          placeholder={t.visao.buscarExemplo}
           value={busca}
           onChange={(e) => {
             setBusca(e.target.value)
             setListaAberta(true)
-            setErroBusca('')
+            setErroBusca(false)
           }}
           onFocus={() => setListaAberta(true)}
           onBlur={() => window.setTimeout(() => setListaAberta(false), 150)}
           onKeyDown={teclado}
-          className="min-h-13 w-full rounded-2xl border border-borda bg-white pl-12 pr-12 text-base shadow-cartao placeholder:text-slate-400"
+          className="min-h-13 w-full rounded-2xl border border-borda bg-superficie pl-12 pr-12 text-base text-texto shadow-cartao placeholder:text-fraco"
         />
         {busca && (
           <button
             type="button"
             onClick={limpar}
-            className="absolute right-3 top-1/2 grid size-9 -translate-y-1/2 place-items-center rounded-lg text-suave hover:bg-slate-50"
-            aria-label="Limpar busca"
+            className="absolute right-3 top-1/2 grid size-9 -translate-y-1/2 place-items-center rounded-lg text-suave hover:bg-superficie-2"
+            aria-label={t.visao.limpar}
           >
             <X className="size-4" aria-hidden />
           </button>
@@ -158,7 +162,7 @@ export function VisaoGeral() {
           <ul
             id="sugestoes-municipio"
             role="listbox"
-            className="absolute inset-x-0 top-full z-30 mt-2 max-h-80 overflow-auto rounded-2xl border border-borda bg-white p-1.5 shadow-lg"
+            className="absolute inset-x-0 top-full z-30 mt-2 max-h-80 overflow-auto rounded-2xl border border-borda bg-superficie p-1.5 shadow-lg"
           >
             {sugestoes.map((m, i) => (
               <li key={m.id} role="option" aria-selected={i === destaque}>
@@ -168,7 +172,7 @@ export function VisaoGeral() {
                   onClick={() => void selecionar(m)}
                   className={cx(
                     'flex w-full items-center justify-between rounded-xl px-3 py-2.5 text-left text-sm',
-                    i === destaque ? 'bg-primaria-clara text-primaria' : 'hover:bg-slate-50',
+                    i === destaque ? 'bg-primaria-clara text-primaria-texto' : 'hover:bg-superficie-2',
                   )}
                 >
                   <span className="font-medium">{m.nome}</span>
@@ -178,7 +182,7 @@ export function VisaoGeral() {
             ))}
           </ul>
         )}
-        {erroBusca && <p className="mt-2 text-sm text-risco-alto">{erroBusca}</p>}
+        {erroBusca && <p className="mt-2 text-sm text-risco-alto">{t.erros.municipios}</p>}
       </div>
 
       {analise && (
@@ -190,26 +194,26 @@ export function VisaoGeral() {
       {/* Indicadores */}
       <div className="mb-6 grid grid-cols-2 gap-3 sm:gap-4 xl:grid-cols-4">
         <Kpi
-          titulo="Risco previsto"
+          titulo={t.visao.kpiRisco}
           valor={stats ? `${formatarNumero(stats.percentual_risco_municipio, 1)}%` : '—'}
-          detalhe={stats ? 'dos alunos avaliados' : 'Selecione um município'}
+          detalhe={stats ? t.visao.kpiRiscoDetalhe : t.visao.kpiSelecione}
           tom={stats && stats.percentual_risco_municipio >= 50 ? 'alto' : 'neutro'}
           icone={<AlertTriangle className="size-4" aria-hidden />}
         />
         <Kpi
-          titulo="Alunos avaliados"
+          titulo={t.visao.kpiAlunos}
           valor={stats ? formatarNumero(stats.total_alunos_avaliados) : '—'}
           icone={<Users className="size-4" aria-hidden />}
         />
         <Kpi
-          titulo="Média geral das notas"
+          titulo={t.visao.kpiMedia}
           valor={stats ? formatarNumero(stats.media_geral, 1) : '—'}
-          detalhe={stats ? 'média observada (não prevista)' : undefined}
+          detalhe={stats ? t.visao.kpiMediaDetalhe : undefined}
           icone={<BarChart3 className="size-4" aria-hidden />}
         />
         <Kpi
-          titulo="Escolas em alto risco"
-          valor={stats ? `${escolasAltoRisco} de ${stats.total_escolas_unicas}` : '—'}
+          titulo={t.visao.kpiEscolas}
+          valor={stats ? t.visao.deTotal(escolasAltoRisco, stats.total_escolas_unicas) : '—'}
           tom={escolasAltoRisco > 0 ? 'alto' : 'neutro'}
           icone={<School className="size-4" aria-hidden />}
         />
@@ -221,7 +225,7 @@ export function VisaoGeral() {
           <MapaMunicipio malha={malha} nome={selecionado ? `${selecionado.nome} – ${selecionado.uf}` : undefined} />
         </Cartao>
         <Cartao className="p-5 sm:p-6 lg:col-span-2">
-          <TituloCartao titulo="Escolas por nível de risco" subtitulo="% de alunos classificados em risco em cada escola" />
+          <TituloCartao titulo={t.visao.distribuicaoTitulo} subtitulo={t.visao.distribuicaoSub} />
           {analise ? <DistribuicaoRisco escolas={analise.escolas} /> : <SemMunicipio carregando={carregando} />}
         </Cartao>
       </div>
@@ -237,8 +241,8 @@ export function VisaoGeral() {
         <Cartao className="overflow-hidden">
           <div className="p-5 sm:p-6">
             <TituloCartao
-              titulo="Escolas prioritárias para intervenção"
-              subtitulo={`${analise.escolas.length} escolas em ${analise.municipio} – ${analise.uf}, ordenadas pelo risco`}
+              titulo={t.visao.escolasTitulo}
+              subtitulo={t.visao.escolasSub(analise.escolas.length, analise.municipio, analise.uf)}
             />
           </div>
           <TabelaEscolas escolas={verTodas ? analise.escolas : analise.escolas.slice(0, ESCOLAS_INICIAIS)} />
@@ -247,9 +251,9 @@ export function VisaoGeral() {
               <button
                 type="button"
                 onClick={() => setVerTodas((v) => !v)}
-                className="min-h-10 rounded-lg px-4 text-sm font-semibold text-primaria hover:bg-primaria-clara"
+                className="min-h-10 rounded-lg px-4 text-sm font-semibold text-primaria-texto hover:bg-primaria-clara"
               >
-                {verTodas ? 'Mostrar menos' : `Ver todas as ${analise.escolas.length} escolas`}
+                {verTodas ? t.visao.verMenos : t.visao.verTodas(analise.escolas.length)}
               </button>
             </div>
           )}
@@ -260,34 +264,40 @@ export function VisaoGeral() {
 }
 
 function SemMunicipio({ carregando }: { carregando: boolean }) {
-  if (carregando) return <Carregando texto="Analisando município…" />
+  const { t } = usePreferencias()
+  if (carregando) return <Carregando texto={t.visao.analisando} />
   return (
     <div className="flex h-full min-h-40 flex-col items-center justify-center gap-2 text-center">
-      <Search className="size-6 text-slate-300" aria-hidden />
-      <p className="max-w-56 text-sm text-suave">Busque um município acima para ver a distribuição das escolas.</p>
+      <Search className="size-6 text-fraco" aria-hidden />
+      <p className="max-w-56 text-sm text-suave">{t.visao.vazio}</p>
     </div>
   )
 }
 
 function DistribuicaoRisco({ escolas }: { escolas: EscolaResumo[] }) {
+  const { t } = usePreferencias()
   const total = escolas.length || 1
-  const grupos = [
-    { nivel: 'alto' as const, rotulo: 'Risco alto (≥ 50%)', cor: 'bg-risco-alto' },
-    { nivel: 'medio' as const, rotulo: 'Risco médio (25–50%)', cor: 'bg-risco-medio' },
-    { nivel: 'baixo' as const, rotulo: 'Risco baixo (< 25%)', cor: 'bg-risco-baixo' },
-  ].map((g) => ({ ...g, qtd: escolas.filter((e) => nivelDaEscola(e.status_alerta) === g.nivel).length }))
+  const faixas: Array<{ nivel: NivelRisco; rotulo: string }> = [
+    { nivel: 'alto', rotulo: t.visao.faixaAlta },
+    { nivel: 'medio', rotulo: t.visao.faixaMedia },
+    { nivel: 'baixo', rotulo: t.visao.faixaBaixa },
+  ]
+  const grupos = faixas.map((f) => ({
+    ...f,
+    qtd: escolas.filter((e) => nivelDaEscola(e.status_alerta) === f.nivel).length,
+  }))
 
   return (
     <div className="mt-6 flex flex-col gap-5">
-      <div className="flex h-3 overflow-hidden rounded-full bg-slate-100" aria-hidden>
+      <div className="flex h-3 overflow-hidden rounded-full bg-trilho" aria-hidden>
         {grupos.map((g) => (
-          <div key={g.nivel} className={g.cor} style={{ width: `${(g.qtd / total) * 100}%` }} />
+          <div key={g.nivel} className={COR_NIVEL[g.nivel]} style={{ width: `${(g.qtd / total) * 100}%` }} />
         ))}
       </div>
       <ul className="flex flex-col gap-4">
         {grupos.map((g) => (
           <li key={g.nivel} className="flex items-center gap-3">
-            <span className={cx('size-2.5 shrink-0 rounded-full', g.cor)} aria-hidden />
+            <span className={cx('size-2.5 shrink-0 rounded-full', COR_NIVEL[g.nivel])} aria-hidden />
             <span className="flex-1 text-sm text-texto-2">{g.rotulo}</span>
             <span className="text-sm font-semibold tabular-nums">
               {g.qtd} <span className="font-normal text-suave">({formatarNumero((g.qtd / total) * 100)}%)</span>
@@ -300,18 +310,19 @@ function DistribuicaoRisco({ escolas }: { escolas: EscolaResumo[] }) {
 }
 
 function TabelaEscolas({ escolas }: { escolas: EscolaResumo[] }) {
+  const { t } = usePreferencias()
   return (
     <>
       {/* Computador: tabela */}
       <div className="hidden md:block">
         <table className="w-full text-sm">
-          <thead className="bg-slate-50 text-left text-[11px] font-semibold tracking-wider text-slate-400">
+          <thead className="bg-superficie-2 text-left text-[11px] font-semibold tracking-wider text-fraco">
             <tr>
-              <th className="px-6 py-2.5 font-semibold">ESCOLA (CÓDIGO INEP)</th>
-              <th className="px-4 py-2.5 text-right font-semibold">ALUNOS</th>
-              <th className="px-4 py-2.5 text-right font-semibold">MÉDIA OBSERVADA</th>
-              <th className="px-4 py-2.5 font-semibold">ALUNOS EM RISCO</th>
-              <th className="px-6 py-2.5 font-semibold">NÍVEL</th>
+              <th className="px-6 py-2.5 font-semibold">{t.visao.colEscola}</th>
+              <th className="px-4 py-2.5 text-right font-semibold">{t.visao.colAlunos}</th>
+              <th className="px-4 py-2.5 text-right font-semibold">{t.visao.colMedia}</th>
+              <th className="px-4 py-2.5 font-semibold">{t.visao.colRisco}</th>
+              <th className="px-6 py-2.5 font-semibold">{t.visao.colNivel}</th>
             </tr>
           </thead>
           <tbody>
@@ -341,7 +352,7 @@ function TabelaEscolas({ escolas }: { escolas: EscolaResumo[] }) {
               <BadgeRisco nivel={nivelDaEscola(e.status_alerta)} />
             </div>
             <p className="mt-1 text-xs text-suave">
-              {e.total_alunos_escola} alunos · média {formatarNumero(e.media_escola, 1)}
+              {t.visao.alunosMedia(e.total_alunos_escola, formatarNumero(e.media_escola, 1))}
             </p>
             <div className="mt-3">
               <BarraPercentual valor={e.percentual_risco_escola} />
@@ -354,11 +365,11 @@ function TabelaEscolas({ escolas }: { escolas: EscolaResumo[] }) {
 }
 
 function BarraPercentual({ valor }: { valor: number }) {
-  const cor = valor >= 50 ? 'bg-risco-alto' : valor >= 25 ? 'bg-risco-medio' : 'bg-risco-baixo'
+  const nivel: NivelRisco = valor >= 50 ? 'alto' : valor >= 25 ? 'medio' : 'baixo'
   return (
     <div className="flex items-center gap-3">
-      <div className="h-2 min-w-20 flex-1 overflow-hidden rounded-full bg-slate-100">
-        <div className={cx('h-full rounded-full', cor)} style={{ width: `${Math.min(100, valor)}%` }} />
+      <div className="h-2 min-w-20 flex-1 overflow-hidden rounded-full bg-trilho">
+        <div className={cx('h-full rounded-full', COR_NIVEL[nivel])} style={{ width: `${Math.min(100, valor)}%` }} />
       </div>
       <span className="w-12 text-right text-sm font-semibold tabular-nums">{formatarNumero(valor, 1)}%</span>
     </div>

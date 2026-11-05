@@ -1,11 +1,15 @@
 import type { Perfil, Previsao } from './api'
+import type { Idioma } from './i18n'
+import type { Valores } from './perfil'
 
 // Guarda a última análise para a tela de resultado sobreviver a um F5.
 // sessionStorage pode falhar (aba anônima, bloqueio), então há uma cópia em memória.
 export interface UltimaAnalise {
   perfil: Perfil
-  rotulos: Partial<Record<keyof Perfil, string>>
+  valores: Valores
+  rotulos: Valores
   previsao: Previsao
+  idioma: Idioma
 }
 
 const CHAVE = 'abp-enem:ultima-analise'
@@ -24,7 +28,8 @@ export function lerAnalise(): UltimaAnalise | null {
   if (emMemoria) return emMemoria
   try {
     const bruto = sessionStorage.getItem(CHAVE)
-    emMemoria = bruto ? (JSON.parse(bruto) as UltimaAnalise) : null
+    const lida = bruto ? (JSON.parse(bruto) as Partial<UltimaAnalise>) : null
+    emMemoria = lida?.perfil && lida.previsao && lida.valores ? (lida as UltimaAnalise) : null
   } catch {
     emMemoria = null
   }

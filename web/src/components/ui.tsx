@@ -1,6 +1,7 @@
 import type { ButtonHTMLAttributes, ReactNode } from 'react'
 import { ChevronDown, FlaskConical, LoaderCircle } from 'lucide-react'
-import { ROTULO_NIVEL, type NivelRisco } from '../lib/api'
+import type { NivelRisco } from '../lib/api'
+import { usePreferencias } from '../lib/preferencias'
 
 export function cx(...classes: Array<string | false | null | undefined>) {
   return classes.filter(Boolean).join(' ')
@@ -8,7 +9,7 @@ export function cx(...classes: Array<string | false | null | undefined>) {
 
 export function Cartao({ children, className }: { children: ReactNode; className?: string }) {
   return (
-    <section className={cx('rounded-2xl border border-borda bg-white shadow-cartao', className)}>
+    <section className={cx('rounded-2xl border border-borda bg-superficie shadow-cartao', className)}>
       {children}
     </section>
   )
@@ -44,7 +45,7 @@ export function Botao({
         'inline-flex min-h-11 items-center justify-center gap-2 rounded-xl px-5 text-sm font-semibold transition-colors disabled:cursor-not-allowed disabled:opacity-60',
         variante === 'primario'
           ? 'bg-primaria text-white shadow-[0_4px_12px_rgb(79_70_229/0.25)] hover:bg-primaria-escura'
-          : 'border border-borda bg-white text-texto hover:bg-slate-50',
+          : 'border border-borda bg-superficie text-texto hover:bg-superficie-2',
         className,
       )}
     >
@@ -55,18 +56,19 @@ export function Botao({
 }
 
 const ESTILO_NIVEL: Record<NivelRisco, string> = {
-  alto: 'bg-risco-alto-claro text-red-700',
-  medio: 'bg-risco-medio-claro text-amber-700',
-  baixo: 'bg-risco-baixo-claro text-green-700',
+  alto: 'bg-risco-alto-claro text-risco-alto-texto',
+  medio: 'bg-risco-medio-claro text-risco-medio-texto',
+  baixo: 'bg-risco-baixo-claro text-risco-baixo-texto',
 }
 
-const COR_PONTO: Record<NivelRisco, string> = {
+export const COR_NIVEL: Record<NivelRisco, string> = {
   alto: 'bg-risco-alto',
   medio: 'bg-risco-medio',
   baixo: 'bg-risco-baixo',
 }
 
 export function BadgeRisco({ nivel }: { nivel: NivelRisco }) {
+  const { t } = usePreferencias()
   return (
     <span
       className={cx(
@@ -74,8 +76,8 @@ export function BadgeRisco({ nivel }: { nivel: NivelRisco }) {
         ESTILO_NIVEL[nivel],
       )}
     >
-      <span className={cx('size-1.5 rounded-full', COR_PONTO[nivel])} aria-hidden />
-      {ROTULO_NIVEL[nivel]}
+      <span className={cx('size-1.5 rounded-full', COR_NIVEL[nivel])} aria-hidden />
+      {t.comum.nivel[nivel]}
     </span>
   )
 }
@@ -129,6 +131,7 @@ export function CampoSelecao({
   erro?: string
   onChange: (valor: string) => void
 }) {
+  const { t } = usePreferencias()
   return (
     <div className="flex flex-col gap-1.5">
       <label htmlFor={id} className="text-[13px] font-medium text-texto-2">
@@ -142,13 +145,13 @@ export function CampoSelecao({
           aria-invalid={Boolean(erro)}
           aria-describedby={erro ? `${id}-erro` : undefined}
           className={cx(
-            'min-h-11 w-full appearance-none rounded-xl border bg-white py-2.5 pl-3.5 pr-10 text-sm text-texto',
-            valor === '' && 'text-suave',
+            'min-h-11 w-full appearance-none rounded-xl border bg-superficie py-2.5 pl-3.5 pr-10 text-sm',
+            valor === '' ? 'text-suave' : 'text-texto',
             erro ? 'border-risco-alto' : 'border-borda',
           )}
         >
           <option value="" disabled>
-            Selecione…
+            {t.comum.selecione}
           </option>
           {opcoes.map((opcao) => (
             <option key={String(opcao.valor)} value={String(opcao.valor)}>
@@ -193,7 +196,7 @@ export function Segmentado({
       <div
         role="radiogroup"
         aria-labelledby={id}
-        className={cx('flex gap-1 rounded-xl bg-slate-100 p-1', erro && 'ring-1 ring-risco-alto')}
+        className={cx('flex gap-1 rounded-xl bg-trilho p-1', erro && 'ring-1 ring-risco-alto')}
       >
         {opcoes.map((opcao) => {
           const ativo = opcao.valor === valor
@@ -206,7 +209,7 @@ export function Segmentado({
               onClick={() => onChange(opcao.valor)}
               className={cx(
                 'min-h-10 flex-1 rounded-lg px-4 text-sm transition-colors',
-                ativo ? 'bg-white font-semibold text-texto shadow-sm' : 'font-medium text-suave hover:text-texto',
+                ativo ? 'bg-superficie font-semibold text-texto shadow-sm' : 'font-medium text-suave hover:text-texto',
               )}
             >
               {opcao.rotulo}
@@ -220,13 +223,13 @@ export function Segmentado({
 }
 
 export function AvisoMock({ modelo }: { modelo?: string }) {
+  const { t } = usePreferencias()
   if (modelo !== 'mock') return null
   return (
-    <div className="flex items-start gap-3 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900">
+    <div className="flex items-start gap-3 rounded-xl border border-aviso-borda bg-aviso-fundo px-4 py-3 text-sm text-aviso-texto">
       <FlaskConical className="mt-0.5 size-4 shrink-0" aria-hidden />
       <p>
-        <strong className="font-semibold">Dados simulados.</strong> O modelo ainda está em treinamento; estes
-        valores servem apenas para testar a interface.
+        <strong className="font-semibold">{t.comum.mockTitulo}</strong> {t.comum.mockTexto}
       </p>
     </div>
   )
@@ -242,12 +245,13 @@ export function Carregando({ texto }: { texto: string }) {
 }
 
 export function MensagemErro({ texto, onTentarNovamente }: { texto: string; onTentarNovamente?: () => void }) {
+  const { t } = usePreferencias()
   return (
-    <div className="flex flex-col items-start gap-3 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800 sm:flex-row sm:items-center sm:justify-between">
+    <div className="flex flex-col items-start gap-3 rounded-xl border border-erro-borda bg-erro-fundo px-4 py-3 text-sm text-erro-texto sm:flex-row sm:items-center sm:justify-between">
       <p>{texto}</p>
       {onTentarNovamente && (
         <button type="button" onClick={onTentarNovamente} className="font-semibold underline underline-offset-2">
-          Tentar novamente
+          {t.comum.tentarNovamente}
         </button>
       )}
     </div>

@@ -2,16 +2,22 @@ import { useEffect, useRef, useState } from 'react'
 import type { Map as MapboxMap } from 'mapbox-gl'
 import { MapPinned } from 'lucide-react'
 import { calcularLimites, type Malha } from '../lib/ibge'
+import { usePreferencias, type Tema } from '../lib/preferencias'
 
 const TOKEN = import.meta.env.VITE_MAPBOX_ACCESS_TOKEN
 const FONTE = 'limite-municipio'
 const CAMADA_LINHA = 'limite-municipio-linha'
 const CAMADA_PREENCHIMENTO = 'limite-municipio-preenchimento'
-const COR = '#4f46e5'
 
+const estilo = (tema: Tema) => `mapbox://styles/mapbox/${tema === 'escuro' ? 'dark' : 'light'}-v11`
+const cor = (tema: Tema) => (tema === 'escuro' ? '#818cf8' : '#4f46e5')
+
+// Mapa do Mapbox com o limite oficial do município (adaptado do protótipo EduPredict AI).
 export function MapaMunicipio({ malha, nome }: { malha: Malha | null; nome?: string }) {
+  const { tema, t } = usePreferencias()
   const container = useRef<HTMLDivElement>(null)
   const mapa = useRef<MapboxMap | null>(null)
+  const temaDoMapa = useRef<Tema>(tema)
   const [pronto, setPronto] = useState(false)
   const [erro, setErro] = useState(false)
 
@@ -25,7 +31,7 @@ export function MapaMunicipio({ malha, nome }: { malha: Malha | null; nome?: str
         mapboxgl.accessToken = TOKEN
         const instancia = new mapboxgl.Map({
           container: container.current,
-          style: 'mapbox://styles/mapbox/light-v11',
+          style: estilo(temaDoMapa.current),
           center: [-52, -14],
           zoom: 3.2,
           minZoom: 2.5,
@@ -52,6 +58,16 @@ export function MapaMunicipio({ malha, nome }: { malha: Malha | null; nome?: str
     }
   }, [])
 
+  // Troca o estilo do mapa junto com o tema da página.
+  useEffect(() => {
+    const instancia = mapa.current
+    if (!instancia || !pronto || temaDoMapa.current === tema) return
+    temaDoMapa.current = tema
+    setPronto(false)
+    instancia.setStyle(estilo(tema))
+    instancia.once('style.load', () => setPronto(true))
+  }, [tema, pronto])
+
   useEffect(() => {
     const instancia = mapa.current
     if (!instancia || !pronto || !malha) return
@@ -65,13 +81,13 @@ export function MapaMunicipio({ malha, nome }: { malha: Malha | null; nome?: str
         id: CAMADA_PREENCHIMENTO,
         type: 'fill',
         source: FONTE,
-        paint: { 'fill-color': COR, 'fill-opacity': 0.08 },
+        paint: { 'fill-color': cor(temaDoMapa.current), 'fill-opacity': 0.1 },
       })
       instancia.addLayer({
         id: CAMADA_LINHA,
         type: 'line',
         source: FONTE,
-        paint: { 'line-color': COR, 'line-width': 2 },
+        paint: { 'line-color': cor(temaDoMapa.current), 'line-width': 2 },
       })
     }
 
@@ -82,14 +98,10 @@ export function MapaMunicipio({ malha, nome }: { malha: Malha | null; nome?: str
   if (!TOKEN || erro) {
     return (
       <div className="flex h-full min-h-64 flex-col items-center justify-center gap-3 rounded-2xl border border-dashed border-primaria-borda bg-primaria-clara/50 p-6 text-center">
-        <MapPinned className="size-8 text-primaria" aria-hidden />
+        <MapPinned className="size-8 text-primaria-texto" aria-hidden />
         <div>
-          <p className="text-sm font-semibold text-texto">{nome ? nome : 'Mapa indisponível'}</p>
-          <p className="mx-auto mt-1 max-w-xs text-xs text-suave">
-            {erro
-              ? 'Não foi possível carregar o mapa. Verifique o token do Mapbox e a conexão.'
-              : 'Adicione VITE_MAPBOX_ACCESS_TOKEN no arquivo .env para exibir o mapa.'}
-          </p>
+          <p className="text-sm font-semibold text-texto">{nome ?? t.mapa.indisponivel}</p>
+          <p className="mx-auto mt-1 max-w-xs text-xs text-suave">{erro ? t.mapa.erro : t.mapa.semToken}</p>
         </div>
       </div>
     )
@@ -100,7 +112,7 @@ export function MapaMunicipio({ malha, nome }: { malha: Malha | null; nome?: str
       ref={container}
       className="h-full min-h-64 w-full overflow-hidden rounded-2xl"
       role="region"
-      aria-label={nome ? `Mapa de ${nome}` : 'Mapa do Brasil'}
+      aria-label={t.mapa.rotulo(nome)}
     />
   )
 }

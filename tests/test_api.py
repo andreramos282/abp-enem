@@ -82,3 +82,24 @@ def test_municipio_analytics():
     corpo = resposta.json()
     assert corpo["uf"] == "SP"
     assert corpo["estatisticas_gerais"]["total_escolas_unicas"] == len(corpo["escolas"])
+
+
+def test_opcoes_em_ingles():
+    with cliente() as c:
+        campos = {campo["campo"]: campo for campo in c.get("/api/opcoes?idioma=en").json()["campos"]}
+    assert campos["renda_familiar"]["rotulo"] == "Monthly family income"
+    assert campos["internet"]["opcoes"] == [{"valor": "A", "rotulo": "No"}, {"valor": "B", "rotulo": "Yes"}]
+
+
+def test_prever_em_ingles_mantem_numeros():
+    with cliente() as c:
+        pt = c.post("/api/prever", json=PERFIL).json()
+        en = c.post("/api/prever?idioma=en", json=PERFIL).json()
+    assert pt["probabilidade_risco"] == en["probabilidade_risco"]
+    assert [f["variavel"] for f in pt["fatores"]] == [f["variavel"] for f in en["fatores"]]
+    assert any(f["descricao"] == "No computer at home" for f in en["fatores"])
+
+
+def test_idioma_invalido():
+    with cliente() as c:
+        assert c.get("/api/opcoes?idioma=es").status_code == 422

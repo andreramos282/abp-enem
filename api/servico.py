@@ -17,6 +17,7 @@ from typing import Protocol
 
 from ml import colunas_2023 as c
 
+from .traducoes import FATORES, OPCOES, Idioma, formatar_reais
 from .schemas import (
     AnaliseMunicipio,
     EscolaResumo,
@@ -46,7 +47,7 @@ def renda_per_capita(perfil: PerfilAluno) -> float:
 class Preditor(Protocol):
     nome: str
 
-    def prever(self, perfil: PerfilAluno) -> Previsao: ...
+    def prever(self, perfil: PerfilAluno, idioma: Idioma = "pt") -> Previsao: ...
 
     def analisar_municipio(self, municipio: str, uf: str) -> AnaliseMunicipio: ...
 
@@ -58,24 +59,26 @@ class PreditorMock:
 
     _ESCOLARIDADE_PESO = {"A": 0.9, "B": 0.7, "C": 0.5, "D": 0.3, "E": 0.0, "F": -0.5, "G": -0.7, "H": 0.3}
 
-    def prever(self, perfil: PerfilAluno) -> Previsao:
+    def prever(self, perfil: PerfilAluno, idioma: Idioma = "pt") -> Previsao:
+        frases = FATORES[idioma]
+        opcoes = OPCOES[idioma]
         rpc = renda_per_capita(perfil)
         contribuicoes: list[tuple[str, str, float]] = [
-            ("renda_per_capita", f"Renda per capita de aproximadamente R$ {rpc:,.0f}".replace(",", "."),
+            ("renda_per_capita", frases["renda_per_capita"].format(valor=formatar_reais(rpc, idioma)),
              0.8 * (3.2 - math.log10(rpc + 50))),
-            ("escolaridade_mae", f"Escolaridade da mãe: {c.ESCOLARIDADE[perfil.escolaridade_mae].lower()}",
+            ("escolaridade_mae", frases["escolaridade_mae"].format(valor=opcoes["escolaridade"][perfil.escolaridade_mae].lower()),
              self._ESCOLARIDADE_PESO[perfil.escolaridade_mae]),
-            ("escolaridade_pai", f"Escolaridade do pai: {c.ESCOLARIDADE[perfil.escolaridade_pai].lower()}",
+            ("escolaridade_pai", frases["escolaridade_pai"].format(valor=opcoes["escolaridade"][perfil.escolaridade_pai].lower()),
              0.6 * self._ESCOLARIDADE_PESO[perfil.escolaridade_pai]),
-            ("computador", "Não possui computador em casa" if perfil.computador == "A" else "Possui computador em casa",
+            ("computador", frases["sem_computador" if perfil.computador == "A" else "com_computador"],
              0.45 if perfil.computador == "A" else -0.25),
-            ("internet", "Sem acesso à internet em casa" if perfil.internet == "A" else "Possui acesso à internet em casa",
+            ("internet", frases["sem_internet" if perfil.internet == "A" else "com_internet"],
              0.4 if perfil.internet == "A" else -0.15),
-            ("rede_escola", f"Rede da escola: {c.REDE_ESCOLA[perfil.rede_escola].lower()}",
+            ("rede_escola", frases["rede_escola"].format(valor=opcoes["rede_escola"][perfil.rede_escola].lower()),
              {1: -0.6, 2: 0.35, 3: 0.4, 4: -0.7}[perfil.rede_escola]),
-            ("localizacao_escola", f"Escola em área {c.LOCALIZACAO_ESCOLA[perfil.localizacao_escola].lower()}",
+            ("localizacao_escola", frases["localizacao_escola"].format(valor=opcoes["localizacao_escola"][perfil.localizacao_escola].lower()),
              0.3 if perfil.localizacao_escola == 2 else 0.0),
-            ("faixa_etaria", f"Faixa etária: {c.FAIXA_ETARIA[perfil.faixa_etaria].lower()}",
+            ("faixa_etaria", frases["faixa_etaria"].format(valor=opcoes["faixa_etaria"][perfil.faixa_etaria].lower()),
              0.25 * max(0, perfil.faixa_etaria - 3)),
         ]
 

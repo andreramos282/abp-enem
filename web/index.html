@@ -12,6 +12,14 @@
       rel="stylesheet"
     />
     <title>EducaRadar</title>
+    <script>
+      // Aplica o tema salvo antes de a página aparecer (evita piscar em branco no tema escuro).
+      try {
+        var tema = localStorage.getItem('abp-enem:tema')
+        if (!tema) tema = matchMedia('(prefers-color-scheme: dark)').matches ? 'escuro' : 'claro'
+        document.documentElement.dataset.theme = tema === 'escuro' ? 'dark' : 'light'
+      } catch (e) {}
+    </script>
   </head>
   <body>
     <div id="root"></div>
