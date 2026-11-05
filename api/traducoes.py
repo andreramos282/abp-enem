@@ -70,16 +70,25 @@ def _renda_en() -> dict[str, str]:
     # Mesmas faixas do ENEM 2023, com a formatação de moeda em inglês.
     limites = [1320, 1980, 2640, 3300, 3960, 5280, 6600, 7920, 9240, 10560, 11880, 13200, 15840, 19800, 26400]
     rotulos = {"A": "No income", "B": "Up to R$ 1,320.00"}
-    for codigo, minimo, maximo in zip("CDEFGHIJKLMNOP", limites, limites[1:]):
+    for codigo, minimo, maximo in zip("CDEFGHIJKLMNOP", limites[:-1], limites[1:], strict=True):
         rotulos[codigo] = f"R$ {minimo + 0.01:,.2f} to R$ {maximo:,.2f}"
     rotulos["Q"] = "Above R$ 26,400.00"
     return rotulos
 
 
 _FAIXA_ETARIA_EN = {
-    1: "Under 17", **{n: f"{n + 15} years old" for n in range(2, 11)},
-    11: "26 to 30", 12: "31 to 35", 13: "36 to 40", 14: "41 to 45", 15: "46 to 50",
-    16: "51 to 55", 17: "56 to 60", 18: "61 to 65", 19: "66 to 70", 20: "Over 70",
+    1: "Under 17",
+    **{n: f"{n + 15} years old" for n in range(2, 11)},
+    11: "26 to 30",
+    12: "31 to 35",
+    13: "36 to 40",
+    14: "41 to 45",
+    15: "46 to 50",
+    16: "51 to 55",
+    17: "56 to 60",
+    18: "61 to 65",
+    19: "66 to 70",
+    20: "Over 70",
 }
 
 OPCOES: dict[Idioma, dict[str, dict]] = {
@@ -148,7 +157,13 @@ FATORES: dict[Idioma, dict[str, str]] = {
 
 REGIOES: dict[Idioma, dict[str, str]] = {
     "pt": {r: r for r in ["Norte", "Nordeste", "Centro-Oeste", "Sudeste", "Sul"]},
-    "en": {"Norte": "North", "Nordeste": "Northeast", "Centro-Oeste": "Central-West", "Sudeste": "Southeast", "Sul": "South"},
+    "en": {
+        "Norte": "North",
+        "Nordeste": "Northeast",
+        "Centro-Oeste": "Central-West",
+        "Sudeste": "Southeast",
+        "Sul": "South",
+    },
 }
 
 

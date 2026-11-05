@@ -1,11 +1,8 @@
 import type { ButtonHTMLAttributes, ReactNode } from 'react'
 import { ChevronDown, FlaskConical, LoaderCircle } from 'lucide-react'
 import type { NivelRisco } from '../lib/api'
-import { usePreferencias } from '../lib/preferencias'
-
-export function cx(...classes: Array<string | false | null | undefined>) {
-  return classes.filter(Boolean).join(' ')
-}
+import { COR_NIVEL, cx } from '../lib/estilos'
+import { usePreferencias } from '../lib/usePreferencias'
 
 export function Cartao({ children, className }: { children: ReactNode; className?: string }) {
   return (
@@ -59,12 +56,6 @@ const ESTILO_NIVEL: Record<NivelRisco, string> = {
   alto: 'bg-risco-alto-claro text-risco-alto-texto',
   medio: 'bg-risco-medio-claro text-risco-medio-texto',
   baixo: 'bg-risco-baixo-claro text-risco-baixo-texto',
-}
-
-export const COR_NIVEL: Record<NivelRisco, string> = {
-  alto: 'bg-risco-alto',
-  medio: 'bg-risco-medio',
-  baixo: 'bg-risco-baixo',
 }
 
 export function BadgeRisco({ nivel }: { nivel: NivelRisco }) {

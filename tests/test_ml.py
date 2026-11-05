@@ -17,10 +17,27 @@ def modelo_treinado(tmp_path_factory):
     pasta = tmp_path_factory.mktemp("ml")
     micro = salvar(pasta / "MICRODADOS_ENEM_2023.csv", n=6000)
     amostra = pasta / "amostra.csv"
-    subprocess.run([sys.executable, "-m", "ml.preparar_dados", str(micro), "--tamanho", "3000", "--saida", str(amostra)],
-                   check=True)
-    subprocess.run([sys.executable, "-m", "ml.treinar", "--amostra", str(amostra), "--saida", str(pasta / "models"),
-                    "--modelos", "regressao_logistica", "mlp", "--amostra-grid", "2000"], check=True)
+    subprocess.run(
+        [sys.executable, "-m", "ml.preparar_dados", str(micro), "--tamanho", "3000", "--saida", str(amostra)],
+        check=True,
+    )
+    subprocess.run(
+        [
+            sys.executable,
+            "-m",
+            "ml.treinar",
+            "--amostra",
+            str(amostra),
+            "--saida",
+            str(pasta / "models"),
+            "--modelos",
+            "regressao_logistica",
+            "mlp",
+            "--amostra-grid",
+            "2000",
+        ],
+        check=True,
+    )
     return pasta / "models", amostra
 
 
@@ -45,8 +62,15 @@ def test_api_com_modelo_real(modelo_treinado, monkeypatch):
         assert cliente.get("/api/health").json()["modelo"] != "mock"
 
         vulneravel = {**PERFIL, "renda_familiar": "B", "computador": "A", "internet": "A", "escolaridade_mae": "B"}
-        favorecido = {**PERFIL, "renda_familiar": "O", "computador": "C", "internet": "B", "escolaridade_mae": "G",
-                      "rede_escola": 4, "tipo_escola": 3}
+        favorecido = {
+            **PERFIL,
+            "renda_familiar": "O",
+            "computador": "C",
+            "internet": "B",
+            "escolaridade_mae": "G",
+            "rede_escola": 4,
+            "tipo_escola": 3,
+        }
         p_v = cliente.post("/api/prever", json=vulneravel).json()
         p_f = cliente.post("/api/prever?idioma=en", json=favorecido).json()
         assert p_v["probabilidade_risco"] > p_f["probabilidade_risco"]

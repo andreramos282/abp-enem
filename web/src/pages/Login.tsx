@@ -1,5 +1,5 @@
 import { useState, type FormEvent } from 'react'
-import { usePreferencias } from '../lib/preferencias'
+import { usePreferencias } from '../lib/usePreferencias'
 import { navegar } from '../lib/rotas'
 import { Logo } from '../components/Layout'
 import { ControlesPreferencias } from '../components/Preferencias'

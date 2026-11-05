@@ -1,7 +1,7 @@
 import { Moon, Sun } from 'lucide-react'
 import type { Idioma } from '../lib/i18n'
-import { usePreferencias } from '../lib/preferencias'
-import { cx } from './ui'
+import { usePreferencias } from '../lib/usePreferencias'
+import { cx } from '../lib/estilos'
 
 // Botões de idioma (PT/EN) e de tema (claro/escuro).
 export function ControlesPreferencias({ sobreEscuro = false }: { sobreEscuro?: boolean }) {

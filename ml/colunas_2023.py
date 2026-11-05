@@ -49,10 +49,10 @@ PRESENCAS = ["TP_PRESENCA_CN", "TP_PRESENCA_CH", "TP_PRESENCA_LC", "TP_PRESENCA_
 STATUS_REDACAO = "TP_STATUS_REDACAO"
 SITUACAO_CONCLUSAO = "TP_ST_CONCLUSAO"
 
-CONCLUINTE = 2            # TP_ST_CONCLUSAO = 2 -> concluindo o ensino médio no ano
-PRESENTE = 1              # TP_PRESENCA_* = 1 -> presente na prova
-REDACAO_VALIDA = 1        # TP_STATUS_REDACAO = 1 -> sem problemas
-QUANTIL_RISCO = 0.25      # alvo = 1 se a média das 5 notas ficar no quartil inferior
+CONCLUINTE = 2  # TP_ST_CONCLUSAO = 2 -> concluindo o ensino médio no ano
+PRESENTE = 1  # TP_PRESENCA_* = 1 -> presente na prova
+REDACAO_VALIDA = 1  # TP_STATUS_REDACAO = 1 -> sem problemas
+QUANTIL_RISCO = 0.25  # alvo = 1 se a média das 5 notas ficar no quartil inferior
 
 # As notas servem SOMENTE para criar o alvo. Nunca use como entrada do modelo.
 COLUNAS_PROIBIDAS_NA_ENTRADA = NOTAS + PRESENCAS + [STATUS_REDACAO]
@@ -103,9 +103,23 @@ RENDA_FAMILIAR = {
 
 # Valor aproximado (meio da faixa, em R$) para calcular a renda per capita.
 RENDA_VALOR_MEDIO = {
-    "A": 0, "B": 660, "C": 1650, "D": 2310, "E": 2970, "F": 3630, "G": 4620,
-    "H": 5940, "I": 7260, "J": 8580, "K": 9900, "L": 11220, "M": 12540,
-    "N": 14520, "O": 17820, "P": 23100, "Q": 30000,
+    "A": 0,
+    "B": 660,
+    "C": 1650,
+    "D": 2310,
+    "E": 2970,
+    "F": 3630,
+    "G": 4620,
+    "H": 5940,
+    "I": 7260,
+    "J": 8580,
+    "K": 9900,
+    "L": 11220,
+    "M": 12540,
+    "N": 14520,
+    "O": 17820,
+    "P": 23100,
+    "Q": 30000,
 }
 
 COMPUTADOR = {"A": "Não", "B": "Sim, um", "C": "Sim, dois", "D": "Sim, três", "E": "Sim, quatro ou mais"}
@@ -116,17 +130,56 @@ REDE_ESCOLA = {1: "Federal", 2: "Estadual", 3: "Municipal", 4: "Privada"}
 LOCALIZACAO_ESCOLA = {1: "Urbana", 2: "Rural"}
 
 FAIXA_ETARIA = {
-    1: "Menor de 17 anos", 2: "17 anos", 3: "18 anos", 4: "19 anos", 5: "20 anos",
-    6: "21 anos", 7: "22 anos", 8: "23 anos", 9: "24 anos", 10: "25 anos",
-    11: "Entre 26 e 30 anos", 12: "Entre 31 e 35 anos", 13: "Entre 36 e 40 anos",
-    14: "Entre 41 e 45 anos", 15: "Entre 46 e 50 anos", 16: "Entre 51 e 55 anos",
-    17: "Entre 56 e 60 anos", 18: "Entre 61 e 65 anos", 19: "Entre 66 e 70 anos",
+    1: "Menor de 17 anos",
+    2: "17 anos",
+    3: "18 anos",
+    4: "19 anos",
+    5: "20 anos",
+    6: "21 anos",
+    7: "22 anos",
+    8: "23 anos",
+    9: "24 anos",
+    10: "25 anos",
+    11: "Entre 26 e 30 anos",
+    12: "Entre 31 e 35 anos",
+    13: "Entre 36 e 40 anos",
+    14: "Entre 41 e 45 anos",
+    15: "Entre 46 e 50 anos",
+    16: "Entre 51 e 55 anos",
+    17: "Entre 56 e 60 anos",
+    18: "Entre 61 e 65 anos",
+    19: "Entre 66 e 70 anos",
     20: "Maior de 70 anos",
 }
 
 UFS = [
-    "AC", "AL", "AM", "AP", "BA", "CE", "DF", "ES", "GO", "MA", "MG", "MS", "MT", "PA",
-    "PB", "PE", "PI", "PR", "RJ", "RN", "RO", "RR", "RS", "SC", "SE", "SP", "TO",
+    "AC",
+    "AL",
+    "AM",
+    "AP",
+    "BA",
+    "CE",
+    "DF",
+    "ES",
+    "GO",
+    "MA",
+    "MG",
+    "MS",
+    "MT",
+    "PA",
+    "PB",
+    "PE",
+    "PI",
+    "PR",
+    "RJ",
+    "RN",
+    "RO",
+    "RR",
+    "RS",
+    "SC",
+    "SE",
+    "SP",
+    "TO",
 ]
 
 REGIAO_POR_UF = {

@@ -1,15 +1,7 @@
-import { createContext, useContext, useEffect, useMemo, useState, type ReactNode } from 'react'
-import { LOCALE, TEXTOS, type Idioma, type Textos } from './i18n'
-
-export type Tema = 'claro' | 'escuro'
-
-interface Preferencias {
-  idioma: Idioma
-  tema: Tema
-  t: Textos
-  setIdioma: (idioma: Idioma) => void
-  alternarTema: () => void
-}
+import { useEffect, useMemo, useState, type ReactNode } from 'react'
+import { LOCALE, TEXTOS, type Idioma } from './i18n'
+import { definirIdiomaAtual } from './idioma-atual'
+import { ContextoPreferencias, type Preferencias, type Tema } from './usePreferencias'
 
 const CHAVE_IDIOMA = 'abp-enem:idioma'
 const CHAVE_TEMA = 'abp-enem:tema'
@@ -43,17 +35,10 @@ function temaInicial(): Tema {
   return window.matchMedia?.('(prefers-color-scheme: dark)').matches ? 'escuro' : 'claro'
 }
 
-// Idioma atual fora do React (usado na formatação de números e nas chamadas da API).
-let idiomaAtual: Idioma = 'pt'
-export const obterIdioma = () => idiomaAtual
-export const obterLocale = () => LOCALE[idiomaAtual]
-
-const Contexto = createContext<Preferencias | null>(null)
-
 export function ProvedorPreferencias({ children }: { children: ReactNode }) {
   const [idioma, setIdioma] = useState<Idioma>(idiomaInicial)
   const [tema, setTema] = useState<Tema>(temaInicial)
-  idiomaAtual = idioma
+  definirIdiomaAtual(idioma)
 
   useEffect(() => {
     gravar(CHAVE_IDIOMA, idioma)
@@ -65,7 +50,9 @@ export function ProvedorPreferencias({ children }: { children: ReactNode }) {
     const raiz = document.documentElement
     raiz.dataset.theme = tema === 'escuro' ? 'dark' : 'light'
     raiz.style.colorScheme = tema === 'escuro' ? 'dark' : 'light'
-    document.querySelector('meta[name="theme-color"]')?.setAttribute('content', tema === 'escuro' ? '#0b1120' : '#4f46e5')
+    document
+      .querySelector('meta[name="theme-color"]')
+      ?.setAttribute('content', tema === 'escuro' ? '#0b1120' : '#4f46e5')
   }, [tema])
 
   const valor = useMemo<Preferencias>(
@@ -79,11 +66,5 @@ export function ProvedorPreferencias({ children }: { children: ReactNode }) {
     [idioma, tema],
   )
 
-  return <Contexto.Provider value={valor}>{children}</Contexto.Provider>
-}
-
-export function usePreferencias() {
-  const contexto = useContext(Contexto)
-  if (!contexto) throw new Error('usePreferencias deve ser usado dentro de ProvedorPreferencias')
-  return contexto
+  return <ContextoPreferencias.Provider value={valor}>{children}</ContextoPreferencias.Provider>
 }

@@ -32,7 +32,9 @@ build/
 npm-debug.log*
 
 # ---------- Editores e sistema ----------
-.vscode/
+.vscode/*
+!.vscode/extensions.json
+!.vscode/settings.json
 .idea/
 .DS_Store
 Thumbs.db

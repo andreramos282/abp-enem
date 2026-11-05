@@ -2,9 +2,9 @@ import type { ReactNode } from 'react'
 import { ClipboardPlus, FileText, GraduationCap, LayoutGrid, LogOut } from 'lucide-react'
 import { navegar, type Rota } from '../lib/rotas'
 import { lerAnalise } from '../lib/armazenamento'
-import { usePreferencias } from '../lib/preferencias'
+import { usePreferencias } from '../lib/usePreferencias'
 import { ControlesPreferencias } from './Preferencias'
-import { cx } from './ui'
+import { cx } from '../lib/estilos'
 
 interface ItemMenu {
   rota: Rota

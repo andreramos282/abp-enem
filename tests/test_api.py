@@ -55,8 +55,15 @@ def test_prever_e_deterministico():
 
 def test_perfil_mais_vulneravel_tem_mais_risco():
     vulneravel = {**PERFIL, "renda_familiar": "B", "computador": "A", "internet": "A", "escolaridade_mae": "B"}
-    favorecido = {**PERFIL, "renda_familiar": "O", "computador": "C", "internet": "B",
-                  "escolaridade_mae": "G", "rede_escola": 4, "tipo_escola": 3}
+    favorecido = {
+        **PERFIL,
+        "renda_familiar": "O",
+        "computador": "C",
+        "internet": "B",
+        "escolaridade_mae": "G",
+        "rede_escola": 4,
+        "tipo_escola": 3,
+    }
     with cliente() as c:
         risco_v = c.post("/api/prever", json=vulneravel).json()["probabilidade_risco"]
         risco_f = c.post("/api/prever", json=favorecido).json()["probabilidade_risco"]

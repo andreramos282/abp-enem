@@ -1,6 +1,7 @@
 import { useEffect } from 'react'
 import { Layout } from './components/Layout'
-import { ProvedorPreferencias, usePreferencias } from './lib/preferencias'
+import { ProvedorPreferencias } from './lib/preferencias'
+import { usePreferencias } from './lib/usePreferencias'
 import { useRota } from './lib/rotas'
 import { Login } from './pages/Login'
 import { NovaAnalise } from './pages/NovaAnalise'

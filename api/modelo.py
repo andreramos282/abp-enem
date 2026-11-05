@@ -23,8 +23,8 @@ from ml import colunas_2023 as c
 from ml.features import GRUPOS_FATORES, renomear_microdados
 from ml.preparar_dados import carregar
 
+from .regras import classificar, renda_per_capita, status_escola
 from .schemas import AnaliseMunicipio, EscolaResumo, EstatisticasMunicipio, Fator, PerfilAluno, Previsao
-from .servico import classificar, renda_per_capita
 from .traducoes import FATORES, OPCOES, REGIOES, Idioma, formatar_reais
 
 IMPACTO_MINIMO = 0.5  # pontos percentuais
@@ -68,8 +68,12 @@ class PreditorModelo:
         probabilidade = float(probabilidades[0])
 
         fatores = [
-            Fator(variavel=grupo, descricao=_descrever(grupo, perfil, idioma), impacto=round((probabilidade - p_ref) * 100, 1))
-            for grupo, p_ref in zip(grupos, probabilidades[1:])
+            Fator(
+                variavel=grupo,
+                descricao=_descrever(grupo, perfil, idioma),
+                impacto=round((probabilidade - p_ref) * 100, 1),
+            )
+            for grupo, p_ref in zip(grupos, probabilidades[1:], strict=True)
             if abs(probabilidade - p_ref) * 100 >= IMPACTO_MINIMO
         ]
         fatores.sort(key=lambda f: abs(f.impacto), reverse=True)
@@ -118,7 +122,7 @@ class PreditorModelo:
                         total_alunos_escola=int(linha.total),
                         media_escola=round(float(linha.media), 2),
                         percentual_risco_escola=round(percentual, 2),
-                        status_alerta="ALTO_RISCO" if percentual >= 50 else "MEDIO_RISCO" if percentual >= 25 else "BAIXO_RISCO",
+                        status_alerta=status_escola(percentual),
                     )
                 )
             escolas.sort(key=lambda e: (e.percentual_risco_escola, e.total_alunos_escola), reverse=True)

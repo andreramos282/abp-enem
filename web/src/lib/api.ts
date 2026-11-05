@@ -1,4 +1,4 @@
-import { obterIdioma, obterLocale } from './preferencias'
+import { obterIdioma, obterLocale } from './idioma-atual'
 import { TEXTOS } from './i18n'
 
 // Tipos e chamadas da API. Segue o contrato em docs/api.md.
@@ -65,7 +65,6 @@ export interface AnaliseMunicipio {
   escolas: EscolaResumo[]
   modelo: string
 }
-
 
 export type CodigoErro = 'conexao' | 'invalido' | 'naoEncontrado' | 'servidor'
 

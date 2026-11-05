@@ -33,10 +33,7 @@ export function carregarMunicipios(): Promise<Municipio[]> {
       dados.map((m) => ({
         id: m.id,
         nome: m.nome,
-        uf:
-          m.microrregiao?.mesorregiao?.UF?.sigla ??
-          m['regiao-imediata']?.['regiao-intermediaria']?.UF?.sigla ??
-          '',
+        uf: m.microrregiao?.mesorregiao?.UF?.sigla ?? m['regiao-imediata']?.['regiao-intermediaria']?.UF?.sigla ?? '',
       })),
     )
     .catch((erro: unknown) => {
@@ -105,5 +102,10 @@ export function calcularLimites(geometria: Geometry): Limites | null {
     visitar(geometria.coordinates)
   }
 
-  return Number.isFinite(oeste) ? [[oeste, sul], [leste, norte]] : null
+  return Number.isFinite(oeste)
+    ? [
+        [oeste, sul],
+        [leste, norte],
+      ]
+    : null
 }
