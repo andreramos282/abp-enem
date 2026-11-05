@@ -10,6 +10,7 @@ type Valores = Partial<Record<keyof Perfil, string>>
 
 interface Secao {
   titulo: string
+  curto: string
   descricao: string
   campos: Array<keyof Perfil>
 }
@@ -18,16 +19,19 @@ interface Secao {
 const SECOES: Secao[] = [
   {
     titulo: 'Perfil socioeconômico',
+    curto: 'Perfil',
     descricao: 'Renda e contexto familiar do aluno',
     campos: ['renda_familiar', 'pessoas_residencia', 'escolaridade_mae', 'escolaridade_pai', 'ocupacao_mae', 'ocupacao_pai', 'faixa_etaria'],
   },
   {
     titulo: 'Escola',
+    curto: 'Escola',
     descricao: 'Onde o aluno cursa o ensino médio',
     campos: ['rede_escola', 'localizacao_escola', 'uf_escola'],
   },
   {
     titulo: 'Recursos em casa',
+    curto: 'Recursos',
     descricao: 'Estrutura de estudo disponível no domicílio',
     campos: ['computador', 'internet'],
   },
@@ -115,10 +119,10 @@ export function NovaAnalise() {
       />
 
       {/* Etapas */}
-      <ol className="-mx-4 mb-6 flex gap-2 overflow-x-auto px-4 pb-1 sm:mx-0 sm:gap-3 sm:px-0">
+      <ol className="mb-6 flex flex-wrap items-center gap-2 sm:gap-3">
         {SECOES.map((secao, i) => (
           <li key={secao.titulo} className="flex shrink-0 items-center gap-2">
-            {i > 0 && <span className="h-0.5 w-6 bg-primaria-borda sm:w-10" aria-hidden />}
+            {i > 0 && <span className="h-0.5 w-4 bg-primaria-borda sm:w-10" aria-hidden />}
             <span
               className={
                 preenchidas[i]
@@ -128,7 +132,10 @@ export function NovaAnalise() {
             >
               {preenchidas[i] ? <Check className="size-4" aria-label="Concluída" /> : i + 1}
             </span>
-            <span className="text-sm font-medium">{secao.titulo}</span>
+            <span className="text-sm font-medium">
+              <span className="sm:hidden">{secao.curto}</span>
+              <span className="hidden sm:inline">{secao.titulo}</span>
+            </span>
           </li>
         ))}
       </ol>
