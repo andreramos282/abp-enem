@@ -32,12 +32,13 @@ Treino em 5 de novembro de 2026 com uma amostra estratificada de **399.998 concl
 | Regressão logística (baseline) | 0,755 | 0,518 | 69% |
 | Árvore de decisão | 0,747 | 0,513 | 76% |
 | Random forest | 0,760 | 0,523 | 72% |
-| **Gradient boosting** (escolhido) | **0,762** | 0,525 | 71% |
-| Rede neural (MLP) | 0,760 | 0,521 | 67% |
+| Gradient boosting | 0,762 | 0,525 | 71% |
+| **Rede neural (MLP)** (escolhida) | **0,760** | 0,521 | 67% |
 
+- **Modelo escolhido: rede neural (MLP)**, camadas de 64 e 32 neurônios, como previsto no relatório da Sprint 1. A diferença para o melhor modelo (gradient boosting) é de só 0,002 de AUC.
 - **Corte do quartil inferior:** média das 5 notas abaixo de **481,0**.
 - **Teste sem a região Nordeste:** AUC 0,772. O modelo generaliza para uma região que não viu no treino.
-- **Análise de viés:** mesmo sem cor/raça e sexo como entrada, o modelo aponta mais falsos positivos entre alunos pretos (46%) e pardos (45%) do que entre brancos (21%), e encontra menos alunos brancos que estão de fato em risco (recall de 55% contra 74–78%). Isso acompanha as diferenças reais de desempenho (risco real de 16% entre brancos e 32–34% entre pretos e pardos), mas é uma limitação a declarar: o resultado deve apoiar a decisão pedagógica, nunca rotular o aluno.
+- **Análise de viés:** mesmo sem cor/raça e sexo como entrada, o modelo aponta mais falsos positivos entre alunos pretos (43%) e pardos (42%) do que entre brancos (19%), e encontra menos alunos brancos que estão de fato em risco (recall de 52% contra 72–74%). Isso acompanha as diferenças reais de desempenho (risco real de 16% entre brancos e 32–34% entre pretos e pardos), mas é uma limitação a declarar: o resultado deve apoiar a decisão pedagógica, nunca rotular o aluno.
 
 Detalhes em [`models/relatorio_treino.md`](models/relatorio_treino.md) e análise exploratória em [`docs/eda/`](docs/eda/README.md).
 
@@ -129,6 +130,7 @@ Veja o [CONTRIBUTING.md](CONTRIBUTING.md): preparação do ambiente, padrão de 
 - [x] Amostragem com os microdados reais e EDA (`python -m ml.eda`)
 - [x] Script de treino: baselines, MLP, GridSearchCV, limiar, viés e teste por região
 - [x] Treino com os dados reais (AUC 0,76)
-- [ ] Decidir o modelo final (gradient boosting ou MLP) e compartilhar o `pipeline.pkl` com o grupo
+- [x] Modelo final: rede neural (MLP)
+- [ ] Compartilhar `models/pipeline.pkl` e a amostra com o grupo (Drive)
 - [x] Integração do modelo real na API (com explicação dos fatores)
 - [ ] Análise de viés e explicabilidade

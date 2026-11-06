@@ -1,7 +1,7 @@
 {
-  "modelo": "gradient_boosting",
-  "versao": "gradient_boosting-20261106",
-  "treinado_em": "2026-11-06T00:04:07+00:00",
+  "modelo": "mlp",
+  "versao": "mlp-20261106",
+  "treinado_em": "2026-11-06T00:13:54+00:00",
   "versao_sklearn": "1.6.1",
   "ano_dados": 2023,
   "amostra": {
@@ -47,7 +47,7 @@
     "Q022",
     "Q023"
   ],
-  "limiar_decisao": 0.2685,
+  "limiar_decisao": 0.2748,
   "referencia": {
     "escolaridade_pai": "E",
     "escolaridade_mae": "E",
@@ -101,7 +101,7 @@
           "vp": 13796
         }
       },
-      "segundos": 10.4
+      "segundos": 12.3
     },
     "arvore_decisao": {
       "melhores_parametros": {
@@ -124,7 +124,7 @@
           "vp": 15144
         }
       },
-      "segundos": 12.4
+      "segundos": 13.5
     },
     "random_forest": {
       "melhores_parametros": {
@@ -147,7 +147,7 @@
           "vp": 14288
         }
       },
-      "segundos": 59.2
+      "segundos": 60.1
     },
     "gradient_boosting": {
       "melhores_parametros": {
@@ -170,7 +170,7 @@
           "vp": 14027
         }
       },
-      "segundos": 21.4
+      "segundos": 21.5
     },
     "mlp": {
       "melhores_parametros": {
@@ -196,7 +196,7 @@
           "vp": 13406
         }
       },
-      "segundos": 64.3
+      "segundos": 61.8
     }
   },
   "analise_vies": {
@@ -204,66 +204,66 @@
       "0": {
         "n": 859,
         "taxa_real_risco": 0.3038,
-        "taxa_prevista_risco": 0.5111,
-        "recall": 0.7931,
-        "falso_positivo": 0.388
+        "taxa_prevista_risco": 0.4971,
+        "recall": 0.7893,
+        "falso_positivo": 0.3696
       },
       "1": {
         "n": 36613,
         "taxa_real_risco": 0.164,
-        "taxa_prevista_risco": 0.2629,
-        "recall": 0.5516,
-        "falso_positivo": 0.2063
+        "taxa_prevista_risco": 0.2454,
+        "recall": 0.5212,
+        "falso_positivo": 0.1913
       },
       "2": {
         "n": 8709,
         "taxa_real_risco": 0.3345,
-        "taxa_prevista_risco": 0.5582,
-        "recall": 0.7439,
-        "falso_positivo": 0.4648
+        "taxa_prevista_risco": 0.5231,
+        "recall": 0.7158,
+        "falso_positivo": 0.4263
       },
       "3": {
         "n": 32183,
         "taxa_real_risco": 0.3159,
-        "taxa_prevista_risco": 0.551,
-        "recall": 0.7761,
-        "falso_positivo": 0.447
+        "taxa_prevista_risco": 0.5226,
+        "recall": 0.7423,
+        "falso_positivo": 0.4212
       },
       "4": {
         "n": 1188,
         "taxa_real_risco": 0.2719,
-        "taxa_prevista_risco": 0.4461,
-        "recall": 0.7802,
-        "falso_positivo": 0.3214
+        "taxa_prevista_risco": 0.4217,
+        "recall": 0.7554,
+        "falso_positivo": 0.2971
       },
       "5": {
         "n": 448,
         "taxa_real_risco": 0.5112,
-        "taxa_prevista_risco": 0.7366,
-        "recall": 0.869,
-        "falso_positivo": 0.5982
+        "taxa_prevista_risco": 0.7031,
+        "recall": 0.8515,
+        "falso_positivo": 0.5479
       }
     },
     "sexo": {
       "F": {
         "n": 47616,
         "taxa_real_risco": 0.2545,
-        "taxa_prevista_risco": 0.4493,
-        "recall": 0.7408,
-        "falso_positivo": 0.3497
+        "taxa_prevista_risco": 0.4234,
+        "recall": 0.7088,
+        "falso_positivo": 0.326
       },
       "M": {
         "n": 32384,
         "taxa_real_risco": 0.2401,
-        "taxa_prevista_risco": 0.3744,
-        "recall": 0.6492,
-        "falso_positivo": 0.2875
+        "taxa_prevista_risco": 0.3534,
+        "recall": 0.6192,
+        "falso_positivo": 0.2694
       }
     }
   },
   "teste_regiao": {
     "regiao_teste": "Nordeste",
     "n_teste": 88036,
-    "auc": 0.7715
+    "auc": 0.7714
   }
 }
