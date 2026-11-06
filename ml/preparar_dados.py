@@ -94,12 +94,31 @@ def salvar(df: pd.DataFrame, caminho: Path) -> None:
         df.to_csv(caminho, index=False)
 
 
-def carregar(caminho: Path) -> pd.DataFrame:
+def carregar(caminho: Path, colunas: list[str] | None = None, economizar_memoria: bool = False) -> pd.DataFrame:
+    """Lê a amostra (Parquet ou CSV).
+
+    colunas: lê só estas colunas (as que não existirem no arquivo são ignoradas).
+    economizar_memoria: guarda textos como categorias e devolve a memória usada na leitura
+    (usado pela API, que roda em servidores pequenos).
+    """
     if caminho.suffix == ".parquet":
-        return pd.read_parquet(caminho)
-    return pd.read_csv(
-        caminho, dtype={col: "string" for col in [*c.BENS, "Q001", "Q002", "Q003", "Q004", "Q006", "Q024", "Q025"]}
-    )
+        import pyarrow as pa
+        import pyarrow.parquet as pq
+
+        if colunas is not None:
+            existentes = set(pq.read_schema(caminho).names)
+            colunas = [col for col in colunas if col in existentes]
+        tabela = pq.read_table(caminho, columns=colunas)
+        df = tabela.to_pandas(strings_to_categorical=economizar_memoria)
+        del tabela
+        pa.default_memory_pool().release_unused()
+        return df
+    texto = {col: "string" for col in [*c.BENS, "Q001", "Q002", "Q003", "Q004", "Q006", "Q024", "Q025"]}
+    df = pd.read_csv(caminho, dtype=texto, usecols=None if colunas is None else (lambda col: col in colunas))
+    if economizar_memoria:
+        for coluna in df.select_dtypes(include=["object", "string"]).columns:
+            df[coluna] = df[coluna].astype("category")
+    return df
 
 
 def main() -> None:
