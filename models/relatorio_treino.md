@@ -1,4 +1,4 @@
-# Relatório de treino – gradient_boosting-20261105
+# Relatório de treino – gradient_boosting-20261106
 
 - Dados: ENEM 2023 · 399.998 concluintes
 - Divisão: ajuste 279.998 · validação 40.000 · teste 80.000

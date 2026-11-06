@@ -1,8 +1,8 @@
 {
   "modelo": "gradient_boosting",
-  "versao": "gradient_boosting-20261105",
-  "treinado_em": "2026-11-05T23:55:30+00:00",
-  "versao_sklearn": "1.9.1",
+  "versao": "gradient_boosting-20261106",
+  "treinado_em": "2026-11-06T00:04:07+00:00",
+  "versao_sklearn": "1.6.1",
   "ano_dados": 2023,
   "amostra": {
     "total": 399998,
@@ -53,7 +53,7 @@
     "escolaridade_mae": "E",
     "ocupacao_pai": "C",
     "ocupacao_mae": "B",
-    "pessoas_residencia": 4,
+    "pessoas_residencia": "4",
     "renda_familiar": "B",
     "computador": "A",
     "internet": "B",
@@ -101,7 +101,7 @@
           "vp": 13796
         }
       },
-      "segundos": 9.9
+      "segundos": 10.4
     },
     "arvore_decisao": {
       "melhores_parametros": {
@@ -124,7 +124,7 @@
           "vp": 15144
         }
       },
-      "segundos": 11.9
+      "segundos": 12.4
     },
     "random_forest": {
       "melhores_parametros": {
@@ -147,7 +147,7 @@
           "vp": 14288
         }
       },
-      "segundos": 62.7
+      "segundos": 59.2
     },
     "gradient_boosting": {
       "melhores_parametros": {
@@ -170,7 +170,7 @@
           "vp": 14027
         }
       },
-      "segundos": 19.7
+      "segundos": 21.4
     },
     "mlp": {
       "melhores_parametros": {
@@ -196,7 +196,7 @@
           "vp": 13406
         }
       },
-      "segundos": 69.6
+      "segundos": 64.3
     }
   },
   "analise_vies": {
