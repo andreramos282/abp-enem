@@ -11,4 +11,4 @@ Os arquivos de dados **não vão para o git** (são grandes demais). Cada pessoa
 
 ## Amostra do projeto
 
-A amostra usada por todo o grupo será salva aqui como `amostra_enem_2023.parquet` (cerca de 400 mil concluintes). O link de download ficará neste README quando estiver pronta.
+A amostra usada por todo o grupo já está aqui: `amostra_enem_2023.parquet` (399.998 concluintes, 8 MB, gerada com `python -m ml.preparar_dados`). Ela é usada pela API no painel do município e pelo treino.

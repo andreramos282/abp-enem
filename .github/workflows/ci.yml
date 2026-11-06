@@ -45,3 +45,23 @@ jobs:
         run: npm test
       - name: Build
         run: npm run build
+
+  docker:
+    name: Imagem Docker
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build
+        run: docker build -t edupredict .
+      - name: Sobe o container e testa
+        run: |
+          docker run -d --name app -p 8000:8000 edupredict
+          for i in $(seq 1 30); do curl -sf http://localhost:8000/api/health && break; sleep 2; done
+          echo
+          curl -sf http://localhost:8000/api/health | grep -v '"mock"'
+          curl -sf http://localhost:8000/ | grep -q "<title>EduPredict AI</title>"
+          curl -sf -X POST http://localhost:8000/api/municipios/analytics \
+            -H 'Content-Type: application/json' -d '{"municipio":"Recife","uf":"PE"}' | grep -q total_alunos_avaliados
+      - name: Logs em caso de falha
+        if: failure()
+        run: docker logs app

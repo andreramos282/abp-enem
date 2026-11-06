@@ -40,3 +40,9 @@ def carregar_configuracao() -> Configuracao:
         pasta_modelo=_caminho("PASTA_MODELO", RAIZ / "models"),
         caminho_amostra=_caminho("CAMINHO_AMOSTRA", RAIZ / "data" / "amostra_enem_2023.parquet"),
     )
+
+
+def pasta_front() -> Path:
+    """Pasta com o build do front (npm run build). Se existir, a própria API serve o site."""
+    load_dotenv(RAIZ / ".env", override=False)
+    return _caminho("PASTA_FRONT", RAIZ / "web" / "dist")

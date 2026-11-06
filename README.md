@@ -55,6 +55,14 @@ docs/       Documentação
 tests/      Testes automatizados
 ```
 
+## Rodar tudo com Docker
+
+```bash
+docker compose up --build
+```
+
+O site fica em http://localhost:8000 e a API em http://localhost:8000/docs, já com o modelo treinado. Para publicar na internet, veja [`docs/deploy.md`](docs/deploy.md).
+
 ## Como rodar a API
 
 Requer Python 3.11+.
@@ -131,6 +139,8 @@ Veja o [CONTRIBUTING.md](CONTRIBUTING.md): preparação do ambiente, padrão de 
 - [x] Script de treino: baselines, MLP, GridSearchCV, limiar, viés e teste por região
 - [x] Treino com os dados reais (AUC 0,76)
 - [x] Modelo final: rede neural (MLP)
-- [ ] Compartilhar `models/pipeline.pkl` e a amostra com o grupo (Drive)
+- [x] Modelo (`models/pipeline.pkl`) e amostra (`data/amostra_enem_2023.parquet`) versionados no repositório
+- [x] Imagem Docker com site + API + modelo
+- [ ] Publicar (ver `docs/deploy.md`)
 - [x] Integração do modelo real na API (com explicação dos fatores)
 - [ ] Análise de viés e explicabilidade
