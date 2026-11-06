@@ -6,7 +6,10 @@ quanto a probabilidade muda. Impacto positivo = aquela resposta aumenta o risco
 em relação ao perfil típico. Funciona com qualquer modelo, inclusive a MLP.
 
 Análise por município: usa a amostra do ENEM 2023 (data/amostra_enem_2023.parquet).
-Como é uma amostra, os totais por município são menores que os reais.
+Como é uma amostra, os totais por município são menores que os reais. O "% de risco"
+é a probabilidade média prevista, ou seja, a parcela esperada de alunos no quartil
+inferior (a média nacional é 25%). Os microdados de 2023 não trazem o código da
+escola, então a lista de escolas fica vazia com esta base.
 """
 
 from __future__ import annotations
@@ -38,7 +41,6 @@ class PreditorModelo:
         self.nome = self.metadados.get("versao", "modelo")
         self.entradas: list[str] = self.metadados["entradas"]
         self.referencia: dict = self.metadados["referencia"]
-        self.limiar: float = float(self.metadados.get("limiar_decisao", 0.5))
         self.caminho_amostra = caminho_amostra
         self._amostra: pd.DataFrame | None = None
 
@@ -103,7 +105,8 @@ class PreditorModelo:
             raise LookupError("Nenhum aluno da amostra para este município.")
 
         prob = self.pipeline.predict_proba(dados.reindex(columns=self.entradas))[:, 1]
-        dados["_risco"] = prob >= self.limiar
+        # Risco previsto = probabilidade média (parcela esperada de alunos no quartil inferior).
+        dados["_risco"] = prob
         dados["_media"] = dados["media_notas"].astype(float)
 
         escolas: list[EscolaResumo] = []

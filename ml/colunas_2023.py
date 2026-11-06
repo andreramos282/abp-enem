@@ -34,6 +34,10 @@ VARIAVEIS = {
 # Itens de bens da casa (Q007 a Q023). Viram um único "indice_bens".
 BENS = [f"Q{n:03d}" for n in range(7, 24)]
 
+# Última letra de resposta de cada item (dicionário 2023): usada para pôr todos na escala 0–1.
+# Q007 vai de A a D; Q018, Q020, Q021 e Q023 são Não/Sim (A–B); os demais vão de A a E.
+ULTIMA_RESPOSTA_BENS = {item: "E" for item in BENS} | {"Q007": "D", "Q018": "B", "Q020": "B", "Q021": "B", "Q023": "B"}
+
 # Usadas só na análise de viés. NUNCA entram como entrada do modelo.
 VARIAVEIS_ANALISE_VIES = {"cor_raca": "TP_COR_RACA", "sexo": "TP_SEXO"}
 
@@ -151,6 +155,18 @@ FAIXA_ETARIA = {
     19: "Entre 66 e 70 anos",
     20: "Maior de 70 anos",
 }
+
+# Rótulos usados só na análise de viés (dicionário 2023).
+COR_RACA = {
+    "0": "Não declarado",
+    "1": "Branca",
+    "2": "Preta",
+    "3": "Parda",
+    "4": "Amarela",
+    "5": "Indígena",
+    "6": "Não dispõe da informação",
+}
+SEXO = {"F": "Feminino", "M": "Masculino"}
 
 UFS = [
     "AC",

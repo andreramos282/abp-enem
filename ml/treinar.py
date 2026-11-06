@@ -171,11 +171,18 @@ class ModeloTreinado:
     resultado: dict
 
 
+def _juntar_estratos_raros(estrato: pd.Series, minimo: int = 10) -> pd.Series:
+    """Estratos com poucos alunos impedem a divisão estratificada: juntam-se ao estrato mais comum."""
+    contagem = estrato.value_counts()
+    raros = contagem.index[contagem < minimo]
+    return estrato.where(~estrato.isin(raros), contagem.index[0])
+
+
 def dividir(X: pd.DataFrame, media: pd.Series) -> Divisao:
     """70% ajuste / 10% validação / 20% teste, estratificado por região e tipo de escola.
     O corte do quartil é calculado só no conjunto de ajuste (evita vazamento de informação)."""
     regiao = X["uf_escola"].astype("string").str.upper().map(c.REGIAO_POR_UF).fillna("NI")
-    estrato = regiao + "|" + X["tipo_escola"].astype(str)
+    estrato = _juntar_estratos_raros(regiao + "|" + X["tipo_escola"].astype(str))
     idx_treino, idx_teste = train_test_split(X.index, test_size=0.2, stratify=estrato, random_state=SEMENTE)
     idx_ajuste, idx_val = train_test_split(
         idx_treino, test_size=0.125, stratify=estrato[idx_treino], random_state=SEMENTE
@@ -366,14 +373,24 @@ def relatorio(m: dict) -> str:
                 _linha_tabela("Grupo", "n", "Risco real", "Risco previsto", "Recall", "Falso positivo"),
                 _linha_tabela(*["---"] * 6),
             ]
+            rotulos = {"cor_raca": c.COR_RACA, "sexo": c.SEXO}.get(coluna, {})
             for g, v in grupos.items():
                 linhas.append(
                     _linha_tabela(
-                        g, v["n"], v["taxa_real_risco"], v["taxa_prevista_risco"], v["recall"], v["falso_positivo"]
+                        rotulos.get(g, g),
+                        v["n"],
+                        f"{v['taxa_real_risco']:.1%}",
+                        f"{v['taxa_prevista_risco']:.1%}",
+                        f"{v['recall']:.1%}",
+                        "-" if v["falso_positivo"] is None else f"{v['falso_positivo']:.1%}",
                     )
                 )
             linhas.append("")
-        linhas.append("Códigos dos grupos conforme o dicionário do ENEM 2023 (TP_COR_RACA, TP_SEXO).")
+        linhas += [
+            "Recall: dos alunos realmente no quartil inferior, quantos o modelo apontou.",
+            "Falso positivo: dos alunos fora do quartil inferior, quantos o modelo apontou por engano.",
+            "Cor/raça e sexo NÃO são entradas do modelo; diferenças aqui vêm de variáveis associadas a elas.",
+        ]
     return "\n".join(linhas) + "\n"
 
 

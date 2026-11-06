@@ -1,0 +1,269 @@
+{
+  "modelo": "gradient_boosting",
+  "versao": "gradient_boosting-20261106",
+  "treinado_em": "2026-11-06T00:04:07+00:00",
+  "versao_sklearn": "1.6.1",
+  "ano_dados": 2023,
+  "amostra": {
+    "total": 399998,
+    "ajuste": 279998,
+    "validacao": 40000,
+    "teste": 80000
+  },
+  "alvo": {
+    "descricao": "média das 5 notas no quartil inferior",
+    "corte_media": 481.04,
+    "taxa_risco_treino": 0.25
+  },
+  "entradas": [
+    "escolaridade_pai",
+    "escolaridade_mae",
+    "ocupacao_pai",
+    "ocupacao_mae",
+    "pessoas_residencia",
+    "renda_familiar",
+    "computador",
+    "internet",
+    "tipo_escola",
+    "rede_escola",
+    "localizacao_escola",
+    "uf_escola",
+    "faixa_etaria",
+    "Q007",
+    "Q008",
+    "Q009",
+    "Q010",
+    "Q011",
+    "Q012",
+    "Q013",
+    "Q014",
+    "Q015",
+    "Q016",
+    "Q017",
+    "Q018",
+    "Q019",
+    "Q020",
+    "Q021",
+    "Q022",
+    "Q023"
+  ],
+  "limiar_decisao": 0.2685,
+  "referencia": {
+    "escolaridade_pai": "E",
+    "escolaridade_mae": "E",
+    "ocupacao_pai": "C",
+    "ocupacao_mae": "B",
+    "pessoas_residencia": "4",
+    "renda_familiar": "B",
+    "computador": "A",
+    "internet": "B",
+    "tipo_escola": 2,
+    "rede_escola": 2.0,
+    "localizacao_escola": 1.0,
+    "uf_escola": "SP",
+    "faixa_etaria": 3,
+    "Q007": "A",
+    "Q008": "B",
+    "Q009": "C",
+    "Q010": "A",
+    "Q011": "A",
+    "Q012": "B",
+    "Q013": "A",
+    "Q014": "B",
+    "Q015": "A",
+    "Q016": "B",
+    "Q017": "A",
+    "Q018": "A",
+    "Q019": "B",
+    "Q020": "A",
+    "Q021": "A",
+    "Q022": "D",
+    "Q023": "A"
+  },
+  "resultados": {
+    "regressao_logistica": {
+      "melhores_parametros": {
+        "C": 10.0
+      },
+      "auc_validacao_cruzada": 0.7583,
+      "auc_validacao": 0.7574,
+      "limiar": 0.2787,
+      "teste": {
+        "auc": 0.7551,
+        "f1": 0.518,
+        "precisao": 0.4135,
+        "recall": 0.6934,
+        "acuracia": 0.6791,
+        "matriz_confusao": {
+          "vn": 40534,
+          "fp": 19570,
+          "fn": 6100,
+          "vp": 13796
+        }
+      },
+      "segundos": 10.4
+    },
+    "arvore_decisao": {
+      "melhores_parametros": {
+        "max_depth": 8,
+        "min_samples_leaf": 50
+      },
+      "auc_validacao_cruzada": 0.7478,
+      "auc_validacao": 0.7501,
+      "limiar": 0.2366,
+      "teste": {
+        "auc": 0.7473,
+        "f1": 0.5126,
+        "precisao": 0.3864,
+        "recall": 0.7612,
+        "acuracia": 0.64,
+        "matriz_confusao": {
+          "vn": 36054,
+          "fp": 24050,
+          "fn": 4752,
+          "vp": 15144
+        }
+      },
+      "segundos": 12.4
+    },
+    "random_forest": {
+      "melhores_parametros": {
+        "max_depth": 16,
+        "min_samples_leaf": 10
+      },
+      "auc_validacao_cruzada": 0.7607,
+      "auc_validacao": 0.7621,
+      "limiar": 0.2674,
+      "teste": {
+        "auc": 0.7598,
+        "f1": 0.5227,
+        "precisao": 0.4109,
+        "recall": 0.7181,
+        "acuracia": 0.6738,
+        "matriz_confusao": {
+          "vn": 39620,
+          "fp": 20484,
+          "fn": 5608,
+          "vp": 14288
+        }
+      },
+      "segundos": 59.2
+    },
+    "gradient_boosting": {
+      "melhores_parametros": {
+        "learning_rate": 0.05,
+        "max_leaf_nodes": 31
+      },
+      "auc_validacao_cruzada": 0.7627,
+      "auc_validacao": 0.7649,
+      "limiar": 0.2685,
+      "teste": {
+        "auc": 0.7619,
+        "f1": 0.5252,
+        "precisao": 0.4185,
+        "recall": 0.705,
+        "acuracia": 0.683,
+        "matriz_confusao": {
+          "vn": 40614,
+          "fp": 19490,
+          "fn": 5869,
+          "vp": 14027
+        }
+      },
+      "segundos": 21.4
+    },
+    "mlp": {
+      "melhores_parametros": {
+        "alpha": 0.001,
+        "hidden_layer_sizes": [
+          64,
+          32
+        ]
+      },
+      "auc_validacao_cruzada": 0.7574,
+      "auc_validacao": 0.7627,
+      "limiar": 0.2748,
+      "teste": {
+        "auc": 0.7597,
+        "f1": 0.5206,
+        "precisao": 0.4242,
+        "recall": 0.6738,
+        "acuracia": 0.6914,
+        "matriz_confusao": {
+          "vn": 41905,
+          "fp": 18199,
+          "fn": 6490,
+          "vp": 13406
+        }
+      },
+      "segundos": 64.3
+    }
+  },
+  "analise_vies": {
+    "cor_raca": {
+      "0": {
+        "n": 859,
+        "taxa_real_risco": 0.3038,
+        "taxa_prevista_risco": 0.5111,
+        "recall": 0.7931,
+        "falso_positivo": 0.388
+      },
+      "1": {
+        "n": 36613,
+        "taxa_real_risco": 0.164,
+        "taxa_prevista_risco": 0.2629,
+        "recall": 0.5516,
+        "falso_positivo": 0.2063
+      },
+      "2": {
+        "n": 8709,
+        "taxa_real_risco": 0.3345,
+        "taxa_prevista_risco": 0.5582,
+        "recall": 0.7439,
+        "falso_positivo": 0.4648
+      },
+      "3": {
+        "n": 32183,
+        "taxa_real_risco": 0.3159,
+        "taxa_prevista_risco": 0.551,
+        "recall": 0.7761,
+        "falso_positivo": 0.447
+      },
+      "4": {
+        "n": 1188,
+        "taxa_real_risco": 0.2719,
+        "taxa_prevista_risco": 0.4461,
+        "recall": 0.7802,
+        "falso_positivo": 0.3214
+      },
+      "5": {
+        "n": 448,
+        "taxa_real_risco": 0.5112,
+        "taxa_prevista_risco": 0.7366,
+        "recall": 0.869,
+        "falso_positivo": 0.5982
+      }
+    },
+    "sexo": {
+      "F": {
+        "n": 47616,
+        "taxa_real_risco": 0.2545,
+        "taxa_prevista_risco": 0.4493,
+        "recall": 0.7408,
+        "falso_positivo": 0.3497
+      },
+      "M": {
+        "n": 32384,
+        "taxa_real_risco": 0.2401,
+        "taxa_prevista_risco": 0.3744,
+        "recall": 0.6492,
+        "falso_positivo": 0.2875
+      }
+    }
+  },
+  "teste_regiao": {
+    "regiao_teste": "Nordeste",
+    "n_teste": 88036,
+    "auc": 0.7715
+  }
+}

@@ -85,7 +85,11 @@ def transformar(df: pd.DataFrame) -> pd.DataFrame:
 
     bens = [col for col in c.BENS if col in df.columns]
     if bens:
-        itens = pd.concat([_codigo(df[col]).map(_ITEM_BEM).astype(float) for col in bens], axis=1)
+        # Cada item vai para a escala 0–1 (A = 0, última resposta = 1) antes da média.
+        itens = pd.concat(
+            [_codigo(df[col]).map(_ITEM_BEM).astype(float) / _ITEM_BEM[c.ULTIMA_RESPOSTA_BENS[col]] for col in bens],
+            axis=1,
+        )
         saida["indice_bens"] = itens.mean(axis=1)
     else:
         saida["indice_bens"] = np.nan
