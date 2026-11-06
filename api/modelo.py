@@ -89,12 +89,23 @@ class PreditorModelo:
 
     # ------------------------------------------------------------------ município
     def _carregar_amostra(self) -> pd.DataFrame:
+        """Carrega só as colunas necessárias e guarda textos como categorias.
+
+        Lida inteira, a amostra ocupa ~600 MB de memória; assim fica em torno de 30 MB,
+        o que cabe em servidores pequenos (ex.: plano gratuito do Render, 512 MB).
+        """
         if self._amostra is None:
             if not self.caminho_amostra or not self.caminho_amostra.is_file():
                 raise LookupError("Amostra do ENEM não encontrada. Gere com: python -m ml.preparar_dados")
-            df = renomear_microdados(carregar(self.caminho_amostra))
-            df["_municipio"] = df["municipio_escola"].astype("string").str.strip().str.casefold()
-            df["_uf"] = df["uf_escola"].astype("string").str.strip().str.upper()
+            inep = {**c.VARIAVEIS, **c.VARIAVEIS_CONTEXTO}
+            colunas = [inep.get(col, col) for col in [*self.entradas, "municipio_escola", "co_escola"]]
+            df = renomear_microdados(
+                carregar(self.caminho_amostra, colunas=[*colunas, "media_notas"], economizar_memoria=True)
+            )
+            df = df.dropna(subset=["municipio_escola"])
+            df["_municipio"] = df["municipio_escola"].astype("string").str.strip().str.casefold().astype("category")
+            df["_uf"] = df["uf_escola"].astype("string").str.strip().str.upper().astype("category")
+            df = df.drop(columns="municipio_escola")
             self._amostra = df
         return self._amostra
 
