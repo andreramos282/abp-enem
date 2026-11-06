@@ -1,0 +1,18 @@
+# Só o necessário vai para a imagem.
+.git
+.github
+.vscode
+.venv
+venv
+**/__pycache__
+**/.pytest_cache
+**/node_modules
+web/dist
+notebooks
+docs
+tests
+.env
+.env.*
+data/*.csv
+data/*.zip
+data/MICRODADOS*

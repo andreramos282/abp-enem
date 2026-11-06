@@ -2,6 +2,7 @@
 
 Rodar localmente:  uvicorn api.main:app --reload --port 8000
 Documentação interativa: http://127.0.0.1:8000/docs
+Se web/dist existir (npm run build), o site também é servido em http://127.0.0.1:8000/
 """
 
 from __future__ import annotations
@@ -10,8 +11,9 @@ from contextlib import asynccontextmanager
 
 from fastapi import FastAPI, HTTPException, Query
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.staticfiles import StaticFiles
 
-from .config import carregar_configuracao
+from .config import carregar_configuracao, pasta_front
 from .opcoes import montar_opcoes
 from .schemas import AnaliseMunicipio, MunicipioRequisicao, OpcoesFormulario, PerfilAluno, Previsao
 from .servico import criar_preditor
@@ -65,3 +67,9 @@ def analisar_municipio(requisicao: MunicipioRequisicao) -> AnaliseMunicipio:
         return app.state.preditor.analisar_municipio(requisicao.municipio.strip(), requisicao.uf)
     except LookupError as erro:
         raise HTTPException(status_code=404, detail=str(erro)) from erro
+
+
+# Em produção (Docker), a API também entrega o front-end já compilado.
+# Montado por último para não esconder as rotas /api e /docs.
+if (front := pasta_front()).is_dir():
+    app.mount("/", StaticFiles(directory=front, html=True), name="front")

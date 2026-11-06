@@ -1,12 +1,13 @@
 # ---------- Dados (grandes demais para o git) ----------
 data/*
 !data/README.md
+# A amostra (8 MB) vai para o git: é dado público e permite publicar o sistema completo.
+!data/amostra_enem_2023.parquet
 *.csv
-*.parquet
 *.zip
 
 # ---------- Modelos treinados ----------
-models/*.pkl
+# O modelo final (pipeline.pkl, ~120 KB) vai para o git; outros arquivos de modelo não.
 models/*.joblib
 
 # ---------- Variáveis de ambiente ----------

@@ -1,0 +1,13 @@
+# Sobe o EduPredict AI completo:  docker compose up --build
+# Site: http://localhost:8000   ·   API: http://localhost:8000/docs
+services:
+  edupredict:
+    build:
+      context: .
+      args:
+        VITE_MAPBOX_ACCESS_TOKEN: ${VITE_MAPBOX_ACCESS_TOKEN:-}
+    ports:
+      - "8000:8000"
+    environment:
+      MODO_PREDITOR: ${MODO_PREDITOR:-auto}
+    restart: unless-stopped
