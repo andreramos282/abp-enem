@@ -136,6 +136,10 @@ const pt = {
     probabilidade: 'Probabilidade de baixo desempenho',
     deRisco: 'de risco',
     explicacao: 'Chance estimada de o aluno ficar entre os 25% com menor média no ENEM.',
+    acompanhamentoSim: 'Acompanhamento recomendado',
+    acompanhamentoNao: 'Sem indicação de acompanhamento',
+    acompanhamentoAjuda:
+      'Comparado com o limiar do modelo, ajustado por cor/raça para que todos os grupos tenham a mesma chance de ser encontrados.',
     fatoresTitulo: 'O que mais pesa nesta previsão',
     fatoresSub: 'Quanto cada característica muda o risco em relação ao perfil mais comum, em pontos percentuais',
     pp: 'p.p.',
@@ -316,6 +320,10 @@ const en: Textos = {
     probabilidade: 'Probability of low performance',
     deRisco: 'risk',
     explicacao: 'Estimated chance that the student falls in the bottom 25% of ENEM averages.',
+    acompanhamentoSim: 'Follow-up recommended',
+    acompanhamentoNao: 'No follow-up indicated',
+    acompanhamentoAjuda:
+      "Compared with the model's threshold, adjusted by race/color so that every group has the same chance of being found.",
     fatoresTitulo: 'What weighs most in this prediction',
     fatoresSub:
       'How much each characteristic changes the risk compared with the most common profile, in percentage points',

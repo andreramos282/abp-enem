@@ -33,6 +33,7 @@ export interface Previsao {
   probabilidade_risco: number
   nivel_risco: NivelRisco
   fatores: Fator[]
+  acompanhamento_recomendado?: boolean | null
   modelo: string
 }
 

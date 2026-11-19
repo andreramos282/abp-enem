@@ -79,6 +79,13 @@ class Previsao(BaseModel):
     probabilidade_risco: float = Field(ge=0, le=1)
     nivel_risco: NivelRisco
     fatores: list[Fator]
+    acompanhamento_recomendado: bool | None = Field(
+        default=None,
+        description=(
+            "Se o aluno passa do limiar de acompanhamento. O limiar é ajustado por cor/raça para que todos os "
+            "grupos tenham o mesmo recall (ver docs/resultados). None quando o modelo não informa limiar."
+        ),
+    )
     modelo: str = Field(description="Nome/versão do modelo que gerou a previsão ('mock' enquanto não houver modelo).")
 
 

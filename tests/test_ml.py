@@ -63,7 +63,7 @@ def test_testes_iniciais_e_graficos(modelo_treinado):
     for chave in ("com_regiao", "sem_regiao"):
         assert regiao[chave]["na_regiao"]["auc"] is not None
     assert testes["cor_sexo"]["com"]["teste"]["auc"] and testes["cor_sexo"]["sem"]["teste"]["auc"]
-    assert len(list(graficos.glob("*.png"))) == 7
+    assert len(list(graficos.glob("*.png"))) >= 10
 
 
 def test_api_com_modelo_real(modelo_treinado, monkeypatch):
@@ -90,6 +90,7 @@ def test_api_com_modelo_real(modelo_treinado, monkeypatch):
         p_f = cliente.post("/api/prever?idioma=en", json=favorecido).json()
         assert p_v["probabilidade_risco"] > p_f["probabilidade_risco"]
         assert p_v["fatores"], "a previsão deve trazer fatores"
+        assert isinstance(p_v["acompanhamento_recomendado"], bool)
 
         municipio = cliente.post("/api/municipios/analytics", json={"municipio": "Jacareí", "uf": "SP"})
         assert municipio.status_code == 200
@@ -97,3 +98,26 @@ def test_api_com_modelo_real(modelo_treinado, monkeypatch):
 
         inexistente = cliente.post("/api/municipios/analytics", json={"municipio": "Cidade Inexistente", "uf": "SP"})
         assert inexistente.status_code == 404
+
+
+def test_teste_temporal_em_outro_ano(modelo_treinado, tmp_path):
+    pasta, _, _ = modelo_treinado
+    outro_ano = salvar(tmp_path / "MICRODADOS_ENEM_2022.csv", n=3000)
+    subprocess.run(
+        [
+            sys.executable,
+            "-m",
+            "ml.teste_temporal",
+            str(outro_ano),
+            "--ano",
+            "2022",
+            "--modelo",
+            str(pasta),
+            "--graficos",
+            str(tmp_path / "graficos"),
+        ],
+        check=True,
+    )
+    resultado = json.loads((pasta / "teste_temporal_2022.json").read_text(encoding="utf-8"))
+    assert resultado["ano"] == 2022 and resultado["teste"]["auc"] > 0.6
+    assert (tmp_path / "graficos" / "12_teste_temporal_2022.png").is_file()

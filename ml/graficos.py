@@ -269,6 +269,121 @@ def grafico_matriz(m: dict, pasta: Path) -> Path:
     return _salvar(fig, pasta / "07_matriz_confusao.png")
 
 
+def grafico_todas_regioes(regioes: dict, pasta: Path) -> Path:
+    nomes = list(regioes)
+    fig, eixos = plt.subplots(1, 2, figsize=(13, 4.4))
+    ax = eixos[0]
+    _barras_agrupadas(
+        ax,
+        nomes,
+        {
+            "Treino com a região": ([regioes[r]["auc_com"] for r in nomes], COR),
+            "Treino sem a região": ([regioes[r]["auc_sem"] for r in nomes], COR_2),
+        },
+        "{:.3f}",
+    )
+    ax.set_ylim(0.5, 0.9)
+    ax.legend(frameon=False, fontsize=8.5, loc="upper left", ncols=2)
+    _estilo(ax, "AUC nos alunos de cada região")
+
+    ax = eixos[1]
+    _barras_agrupadas(
+        ax,
+        nomes,
+        {
+            "Real": ([_pct(regioes[r]["risco_real"]) for r in nomes], COR_REAL),
+            "Previsto (com)": ([_pct(regioes[r]["previsto_com"]) for r in nomes], COR),
+            "Previsto (sem)": ([_pct(regioes[r]["previsto_sem"]) for r in nomes], COR_2),
+        },
+    )
+    ax.set_ylim(0, max(_pct(v[k]) for v in regioes.values() for k in ("risco_real", "previsto_sem")) * 1.35)
+    ax.legend(frameon=False, fontsize=8.5, loc="upper left", ncols=3)
+    _estilo(ax, "Alunos em risco (%): real e previsto")
+    fig.suptitle("Treino com e sem cada região", x=0.01, ha="left", fontsize=12.5, fontweight="bold", color=TEXTO)
+    return _salvar(fig, pasta / "08_todas_regioes.png")
+
+
+def grafico_equidade(m: dict, pasta: Path) -> Path:
+    antes, depois = m["analise_vies"]["cor_raca"], m["equidade"]["vies"]["cor_raca"]
+    grupos = [g for g in ORDEM_COR if g in antes and g in depois]
+    rotulos = [ROTULO_COR[g] for g in grupos]
+    fig, eixos = plt.subplots(1, 2, figsize=(13, 4.4))
+    for ax, chave, titulo in [
+        (eixos[0], "recall", "Recall (%): alunos em risco encontrados"),
+        (eixos[1], "falso_positivo", "Falso positivo (%): alunos fora do risco apontados"),
+    ]:
+        _barras_agrupadas(
+            ax,
+            rotulos,
+            {
+                "Limiar único": ([_pct(antes[g][chave]) for g in grupos], COR_2),
+                "Limiar por grupo": ([_pct(depois[g][chave]) for g in grupos], COR),
+            },
+        )
+        ax.set_ylim(0, 118)
+        ax.set_yticks(range(0, 101, 20))
+        ax.legend(frameon=False, fontsize=8.5, loc="upper left", ncols=2)
+        _estilo(ax, titulo)
+        ax.tick_params(axis="x", labelsize=8)
+    fig.suptitle(
+        "Equidade: limiar por cor/raça para que todos os grupos tenham o mesmo recall",
+        x=0.01,
+        ha="left",
+        fontsize=12.5,
+        fontweight="bold",
+        color=TEXTO,
+    )
+    return _salvar(fig, pasta / "09_equidade_cor_raca.png")
+
+
+def grafico_calibracao(cal: dict, pasta: Path) -> Path:
+    fig, ax = plt.subplots(figsize=(6.2, 5.6))
+    previsto, real = np.array(cal["previsto"]) * 100, np.array(cal["real"]) * 100
+    limite = max(previsto.max(), real.max()) * 1.1
+    ax.plot(previsto, real, color=COR, marker="o", linewidth=2.2, label="Rede neural (MLP)")
+    ax.plot([0, limite], [0, limite], color=TEXTO, linestyle="--", linewidth=1.2, label="Calibração perfeita", zorder=4)
+    ax.set_xlim(0, limite)
+    ax.set_ylim(0, limite)
+    ax.set_xlabel("Risco previsto (%)", color=TEXTO, fontsize=9)
+    ax.set_ylabel("Alunos realmente em risco (%)", color=TEXTO, fontsize=9)
+    ax.legend(frameon=False, fontsize=8.5, loc="upper left")
+    ax.annotate(
+        f"Brier {cal['brier']:.3f} · diferença média {cal['erro_medio'] * 100:.1f} p.p.",
+        (0.98, 0.04),
+        xycoords="axes fraction",
+        ha="right",
+        fontsize=9,
+        color=TEXTO,
+    )
+    _estilo(ax, "Calibração: risco previsto x real (10 faixas)")
+    ax.grid(axis="x", color=GRADE)
+    return _salvar(fig, pasta / "10_calibracao.png")
+
+
+def grafico_shap(imp: dict, pasta: Path) -> Path:
+    itens = sorted(imp["pontos_percentuais"].items(), key=lambda kv: kv[1])
+    fig, ax = plt.subplots(figsize=(8, 0.42 * len(itens) + 1.4))
+    sensiveis = {"Cor/raça", "Sexo", "Região"}
+    barras = ax.barh(
+        [k for k, _ in itens], [v for _, v in itens], color=[COR_REAL if k in sensiveis else COR for k, _ in itens]
+    )
+    for barra, (_, v) in zip(barras, itens, strict=True):
+        ax.annotate(
+            f"{v:.1f}",
+            (v, barra.get_y() + barra.get_height() / 2),
+            xytext=(4, 0),
+            textcoords="offset points",
+            va="center",
+            fontsize=8.5,
+            color=TEXTO,
+        )
+    ax.set_xlabel("Efeito médio na probabilidade de risco (pontos percentuais)", color=TEXTO, fontsize=9)
+    _estilo(ax, f"Importância das variáveis (SHAP, {imp['alunos']} alunos) · laranja: contexto")
+    ax.grid(axis="y", visible=False)
+    ax.grid(axis="x", color=GRADE)
+    return _salvar(fig, pasta / "11_importancia_shap.png")
+
+
 def gerar_graficos(m: dict, pasta: Path) -> list[Path]:
     pasta.mkdir(parents=True, exist_ok=True)
     arquivos: list[Path] = []
@@ -300,6 +415,14 @@ def gerar_graficos(m: dict, pasta: Path) -> list[Path]:
     if m.get("curvas_roc"):
         arquivos.append(grafico_roc(m, pasta))
     arquivos.append(grafico_matriz(m, pasta))
+    if (m.get("testes_iniciais") or {}).get("todas_regioes"):
+        arquivos.append(grafico_todas_regioes(m["testes_iniciais"]["todas_regioes"], pasta))
+    if m.get("equidade") and m.get("analise_vies"):
+        arquivos.append(grafico_equidade(m, pasta))
+    if m.get("calibracao"):
+        arquivos.append(grafico_calibracao(m["calibracao"], pasta))
+    if m.get("importancia_shap"):
+        arquivos.append(grafico_shap(m["importancia_shap"], pasta))
     return arquivos
 
 
