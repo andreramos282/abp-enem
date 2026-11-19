@@ -29,6 +29,10 @@ VARIAVEIS = {
     "localizacao_escola": "TP_LOCALIZACAO_ESC",
     "uf_escola": "SG_UF_ESC",
     "faixa_etaria": "TP_FAIXA_ETARIA",
+    # Dados sensíveis (LGPD, art. 11): entram no modelo por decisão do grupo, e o efeito
+    # deles é medido no treino (comparação com e sem) e na análise de viés.
+    "cor_raca": "TP_COR_RACA",
+    "sexo": "TP_SEXO",
 }
 
 # Itens de bens da casa (Q007 a Q023). Viram um único "indice_bens".
@@ -38,7 +42,8 @@ BENS = [f"Q{n:03d}" for n in range(7, 24)]
 # Q007 vai de A a D; Q018, Q020, Q021 e Q023 são Não/Sim (A–B); os demais vão de A a E.
 ULTIMA_RESPOSTA_BENS = {item: "E" for item in BENS} | {"Q007": "D", "Q018": "B", "Q020": "B", "Q021": "B", "Q023": "B"}
 
-# Usadas só na análise de viés. NUNCA entram como entrada do modelo.
+# Variáveis sensíveis: também usadas para medir o viés do modelo (resultado por grupo).
+SENSIVEIS = ["cor_raca", "sexo"]
 VARIAVEIS_ANALISE_VIES = {"cor_raca": "TP_COR_RACA", "sexo": "TP_SEXO"}
 
 # Identificação da escola e do município (painel do mapa). Não entram no modelo.
@@ -156,7 +161,8 @@ FAIXA_ETARIA = {
     20: "Maior de 70 anos",
 }
 
-# Rótulos usados só na análise de viés (dicionário 2023).
+# Cor/raça e sexo (dicionário 2023). "6" (não dispõe da informação) é código interno do INEP:
+# fica fora do formulário, mas aparece na análise de viés.
 COR_RACA = {
     "0": "Não declarado",
     "1": "Branca",

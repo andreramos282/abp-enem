@@ -35,24 +35,39 @@ def modelo_treinado(tmp_path_factory):
             "mlp",
             "--amostra-grid",
             "2000",
+            "--graficos",
+            str(pasta / "graficos"),
         ],
         check=True,
     )
-    return pasta / "models", amostra
+    return pasta / "models", amostra, pasta / "graficos"
 
 
 def test_treino_gera_arquivos_e_metricas(modelo_treinado):
-    pasta, _ = modelo_treinado
+    pasta, _, graficos = modelo_treinado
     meta = json.loads((pasta / "metadados.json").read_text(encoding="utf-8"))
     assert (pasta / "pipeline.pkl").is_file() and (pasta / "relatorio_treino.md").is_file()
     assert meta["modelo"] in {"regressao_logistica", "mlp"}
     assert 0.2 < meta["alvo"]["taxa_risco_treino"] < 0.3
     assert meta["resultados"][meta["modelo"]]["teste"]["auc"] > 0.7
     assert not any(col.startswith("NU_NOTA") for col in meta["entradas"])
+    assert {"cor_raca", "sexo"} <= set(meta["entradas"])
+
+
+def test_testes_iniciais_e_graficos(modelo_treinado):
+    pasta, _, graficos = modelo_treinado
+    testes = json.loads((pasta / "metadados.json").read_text(encoding="utf-8"))["testes_iniciais"]
+    regiao = testes["regiao"]
+    assert regiao["regiao"] == "Nordeste"
+    assert regiao["n_treino_sem"] < regiao["n_treino_com"]
+    for chave in ("com_regiao", "sem_regiao"):
+        assert regiao[chave]["na_regiao"]["auc"] is not None
+    assert testes["cor_sexo"]["com"]["teste"]["auc"] and testes["cor_sexo"]["sem"]["teste"]["auc"]
+    assert len(list(graficos.glob("*.png"))) == 7
 
 
 def test_api_com_modelo_real(modelo_treinado, monkeypatch):
-    pasta, amostra = modelo_treinado
+    pasta, amostra, _ = modelo_treinado
     monkeypatch.setenv("MODO_PREDITOR", "modelo")
     monkeypatch.setenv("PASTA_MODELO", str(pasta))
     monkeypatch.setenv("CAMINHO_AMOSTRA", str(amostra))

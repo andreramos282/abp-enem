@@ -17,6 +17,8 @@ CodigoOcupacao = Literal["A", "B", "C", "D", "E", "F"]
 CodigoRenda = Literal["A", "B", "C", "D", "E", "F", "G", "H", "I", "J", "K", "L", "M", "N", "O", "P", "Q"]
 CodigoComputador = Literal["A", "B", "C", "D", "E"]
 CodigoInternet = Literal["A", "B"]
+CodigoCorRaca = Literal[0, 1, 2, 3, 4, 5]  # 0 = não declarada (dicionário ENEM 2023)
+CodigoSexo = Literal["F", "M"]
 NivelRisco = Literal["alto", "medio", "baixo"]
 
 
@@ -41,6 +43,10 @@ class PerfilAluno(BaseModel):
     localizacao_escola: Literal[1, 2]
     uf_escola: str = Field(min_length=2, max_length=2)
     faixa_etaria: int = Field(ge=1, le=20)
+    cor_raca: CodigoCorRaca | None = Field(
+        default=None, description="Cor/raça autodeclarada. Ausente = não declarada (0)."
+    )
+    sexo: CodigoSexo | None = Field(default=None, description="Sexo (F/M), como no ENEM. Opcional.")
     bens: dict[str, str] = Field(
         default_factory=dict,
         description="Itens da casa (Q007 a Q023) e o código da resposta. Opcional.",

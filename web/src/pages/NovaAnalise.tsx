@@ -19,12 +19,14 @@ const CAMPOS_POR_SECAO: Array<Array<keyof Perfil>> = [
     'ocupacao_mae',
     'ocupacao_pai',
     'faixa_etaria',
+    'sexo',
+    'cor_raca',
   ],
   ['rede_escola', 'localizacao_escola', 'uf_escola'],
   ['computador', 'internet'],
 ]
 const OBRIGATORIOS = CAMPOS_POR_SECAO.flat()
-const SEGMENTADOS: Array<keyof Perfil> = ['internet', 'localizacao_escola']
+const SEGMENTADOS: Array<keyof Perfil> = ['internet', 'localizacao_escola', 'sexo']
 
 export function NovaAnalise() {
   const { t, idioma } = usePreferencias()

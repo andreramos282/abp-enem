@@ -56,7 +56,7 @@ class PreditorModelo:
         grupos: list[str] = []
         for grupo, colunas in GRUPOS_FATORES.items():
             colunas = [col for col in colunas if col in self.entradas]
-            if grupo == "bens" and not perfil.bens:
+            if (grupo == "bens" and not perfil.bens) or (grupo == "sexo" and perfil.sexo is None):
                 continue
             if not colunas or all(_igual(linha[col], self.referencia.get(col)) for col in colunas):
                 continue
@@ -181,6 +181,10 @@ def _descrever(grupo: str, perfil: PerfilAluno, idioma: Idioma) -> str:
         return frases["sem_internet" if perfil.internet == "A" else "com_internet"]
     if grupo in {"rede_escola", "localizacao_escola", "faixa_etaria"}:
         return frases[grupo].format(valor=opcoes[grupo][getattr(perfil, grupo)].lower())
+    if grupo == "cor_raca":
+        return frases["cor_raca"].format(valor=opcoes["cor_raca"][perfil.cor_raca or 0].lower())
+    if grupo == "sexo" and perfil.sexo:
+        return frases["sexo"].format(valor=opcoes["sexo"][perfil.sexo].lower())
     if grupo == "regiao":
         return frases["regiao"].format(valor=REGIOES[idioma][c.REGIAO_POR_UF[perfil.uf_escola]])
     return frases.get(grupo, grupo)

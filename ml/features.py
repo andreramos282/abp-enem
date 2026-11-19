@@ -43,6 +43,8 @@ NUMERICAS = [
     "faixa_etaria",
 ]
 CATEGORICAS = ["rede_escola", "localizacao_escola", "tipo_escola", "regiao"]
+# Cor/raça e sexo: podem ser ligadas ou desligadas (sensiveis=False) para comparar o efeito delas.
+CATEGORICAS_SENSIVEIS = list(c.SENSIVEIS)
 
 # Grupos de entradas usados para explicar a previsão (ver api/modelo.py).
 GRUPOS_FATORES: dict[str, list[str]] = {
@@ -57,6 +59,8 @@ GRUPOS_FATORES: dict[str, list[str]] = {
     "localizacao_escola": ["localizacao_escola"],
     "regiao": ["uf_escola"],
     "faixa_etaria": ["faixa_etaria"],
+    "cor_raca": ["cor_raca"],
+    "sexo": ["sexo"],
     "bens": c.BENS,
 }
 
@@ -65,8 +69,16 @@ def _codigo(serie: pd.Series) -> pd.Series:
     return serie.astype("string").str.strip().str.upper()
 
 
-def transformar(df: pd.DataFrame) -> pd.DataFrame:
-    """Converte as respostas do questionário em variáveis para o modelo."""
+def colunas_saida(sensiveis: bool = True) -> tuple[list[str], list[str]]:
+    """Colunas numéricas e categóricas geradas por transformar()."""
+    return NUMERICAS, CATEGORICAS + (CATEGORICAS_SENSIVEIS if sensiveis else [])
+
+
+def transformar(df: pd.DataFrame, sensiveis: bool = True) -> pd.DataFrame:
+    """Converte as respostas do questionário em variáveis para o modelo.
+
+    sensiveis=False deixa cor/raça e sexo de fora (usado na comparação do treino).
+    """
     saida = pd.DataFrame(index=df.index)
 
     saida["escolaridade_pai"] = _codigo(df["escolaridade_pai"]).map(_ESCOLARIDADE).astype(float)
@@ -103,10 +115,19 @@ def transformar(df: pd.DataFrame) -> pd.DataFrame:
     uf = _codigo(df["uf_escola"])
     saida["regiao"] = uf.map(c.REGIAO_POR_UF).fillna("Nao informada").astype(str)
 
-    return saida[NUMERICAS + CATEGORICAS]
+    if sensiveis:
+        # Ausente vira "0" (não declarado) em cor/raça e "NI" (não informado) em sexo.
+        cor = df["cor_raca"] if "cor_raca" in df.columns else pd.Series(np.nan, index=df.index)
+        sexo = df["sexo"] if "sexo" in df.columns else pd.Series(np.nan, index=df.index)
+        saida["cor_raca"] = pd.to_numeric(cor, errors="coerce").fillna(0).astype(int).astype(str)
+        saida["sexo"] = _codigo(sexo).fillna("NI").astype(str)
+
+    numericas, categoricas = colunas_saida(sensiveis)
+    return saida[numericas + categoricas]
 
 
-def construir_preprocessador() -> ColumnTransformer:
+def construir_preprocessador(sensiveis: bool = True) -> ColumnTransformer:
+    numericas_cols, categoricas_cols = colunas_saida(sensiveis)
     numericas = Pipeline(
         [
             ("imputar", SimpleImputer(strategy="median", add_indicator=True)),
@@ -115,17 +136,17 @@ def construir_preprocessador() -> ColumnTransformer:
     )
     categoricas = OneHotEncoder(handle_unknown="ignore", sparse_output=False)
     return ColumnTransformer(
-        [("num", numericas, NUMERICAS), ("cat", categoricas, CATEGORICAS)],
+        [("num", numericas, numericas_cols), ("cat", categoricas, categoricas_cols)],
         verbose_feature_names_out=False,
     )
 
 
-def construir_pipeline(modelo) -> Pipeline:
+def construir_pipeline(modelo, sensiveis: bool = True) -> Pipeline:
     """Pipeline completo: variáveis do projeto -> pré-processamento -> classificador."""
     return Pipeline(
         [
-            ("variaveis", FunctionTransformer(transformar)),
-            ("preprocessamento", construir_preprocessador()),
+            ("variaveis", FunctionTransformer(transformar, kw_args={"sensiveis": sensiveis})),
+            ("preprocessamento", construir_preprocessador(sensiveis)),
             ("modelo", modelo),
         ]
     )
@@ -134,6 +155,5 @@ def construir_pipeline(modelo) -> Pipeline:
 def renomear_microdados(df: pd.DataFrame) -> pd.DataFrame:
     """Troca os nomes do INEP (Q001, TP_ESCOLA...) pelos nomes do projeto."""
     mapa = {inep: nome for nome, inep in c.VARIAVEIS.items()}
-    mapa.update({inep: nome for nome, inep in c.VARIAVEIS_ANALISE_VIES.items()})
     mapa.update({inep: nome for nome, inep in c.VARIAVEIS_CONTEXTO.items()})
     return df.rename(columns=mapa)

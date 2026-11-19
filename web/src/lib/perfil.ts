@@ -8,6 +8,7 @@ const CAMPOS_NUMERICOS: Array<keyof Perfil> = [
   'rede_escola',
   'localizacao_escola',
   'faixa_etaria',
+  'cor_raca',
 ]
 
 // Converte os valores do formulário (texto) no perfil enviado à API.
@@ -15,7 +16,9 @@ const CAMPOS_NUMERICOS: Array<keyof Perfil> = [
 export function montarPerfil(valores: Valores): Perfil {
   const rede = Number(valores.rede_escola)
   const perfil: Record<string, string | number> = { ...valores, tipo_escola: rede === 4 ? 3 : 2 }
-  for (const campo of CAMPOS_NUMERICOS) perfil[campo] = Number(perfil[campo])
+  for (const campo of CAMPOS_NUMERICOS) {
+    if (perfil[campo] !== undefined && perfil[campo] !== '') perfil[campo] = Number(perfil[campo])
+  }
   return perfil as unknown as Perfil
 }
 

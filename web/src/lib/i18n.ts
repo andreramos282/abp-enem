@@ -103,7 +103,7 @@ const pt = {
     titulo: 'Nova análise de aluno',
     subtitulo: 'Preencha o perfil para estimar o risco de baixo desempenho no ENEM. Leva menos de 1 minuto.',
     secoes: [
-      { titulo: 'Perfil socioeconômico', curto: 'Perfil', descricao: 'Renda e contexto familiar do aluno' },
+      { titulo: 'Perfil socioeconômico', curto: 'Perfil', descricao: 'Renda, família e dados pessoais do aluno' },
       { titulo: 'Escola', curto: 'Escola', descricao: 'Onde o aluno cursa o ensino médio' },
       { titulo: 'Recursos em casa', curto: 'Recursos', descricao: 'Estrutura de estudo disponível no domicílio' },
     ],
@@ -119,7 +119,7 @@ const pt = {
     ajudaTexto:
       'Um modelo de aprendizado de máquina treinado com os microdados do ENEM 2023 compara este perfil com o de alunos concluintes e estima a chance de o aluno ficar entre os 25% com menor desempenho.',
     ajudaItens: [
-      'Usa só renda, família, escola e recursos em casa',
+      'Usa renda, família, escola, recursos em casa, cor/raça e sexo',
       'Nenhuma nota é usada como entrada',
       'Mostra os fatores que mais pesam no resultado',
     ],
@@ -283,7 +283,7 @@ const en: Textos = {
     titulo: 'New student analysis',
     subtitulo: 'Fill in the profile to estimate the risk of low ENEM performance. It takes less than a minute.',
     secoes: [
-      { titulo: 'Socioeconomic profile', curto: 'Profile', descricao: "Student's income and family background" },
+      { titulo: 'Socioeconomic profile', curto: 'Profile', descricao: "Student's income, family and personal data" },
       { titulo: 'School', curto: 'School', descricao: 'Where the student attends high school' },
       { titulo: 'Resources at home', curto: 'Resources', descricao: 'Study resources available at home' },
     ],
@@ -299,7 +299,7 @@ const en: Textos = {
     ajudaTexto:
       'A machine learning model trained on the 2023 ENEM microdata compares this profile with graduating students and estimates the chance that the student falls in the bottom 25% of performance.',
     ajudaItens: [
-      'Uses only income, family, school and home resources',
+      'Uses income, family, school, home resources, race/color and sex',
       'No test score is used as input',
       'Shows the factors that weigh most in the result',
     ],
