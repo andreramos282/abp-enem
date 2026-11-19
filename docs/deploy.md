@@ -20,7 +20,11 @@ Para o mapa aparecer, coloque `VITE_MAPBOX_ACCESS_TOKEN=pk...` no `.env` da raiz
 1. Crie uma conta em https://render.com com o GitHub.
 2. **New → Web Service** e escolha o repositório `abp-enem`.
 3. Em **Language/Runtime**, escolha **Docker**. O Render usa o `Dockerfile` da raiz.
-4. Em **Environment Variables**, adicione `VITE_MAPBOX_ACCESS_TOKEN` com o token público do Mapbox.
+4. Em **Environment Variables**, adicione:
+   - `VITE_MAPBOX_ACCESS_TOKEN`: token público do Mapbox;
+   - `JWT_SECRET`: um texto aleatório longo (gere com `python -c "import secrets; print(secrets.token_urlsafe(48))"`). Sem ele, todo mundo é deslogado quando o serviço reinicia;
+   - `ADMIN_EMAIL` e `ADMIN_SENHA`: o primeiro usuário, criado quando o banco está vazio. **Não use a senha padrão em produção**;
+   - `DATABASE_URL`: veja "Banco de dados" abaixo.
 5. Em **Health Check Path**, use `/api/health`.
 6. Clique em **Create Web Service**. O endereço fica parecido com `https://edupredict-ai.onrender.com`.
 
@@ -30,6 +34,22 @@ Observações do plano gratuito:
 - O serviço "dorme" depois de um tempo sem acesso, e a primeira visita pode levar cerca de 1 minuto.
 - Há 512 MB de memória. A amostra só é carregada na primeira busca de município.
 - Se o mapa não aparecer, confira se o token foi passado no build. Em alguns provedores, a variável precisa estar marcada como disponível no build.
+
+## Banco de dados (usuários e histórico)
+
+Sem `DATABASE_URL`, a API usa um SQLite dentro do container. No Render gratuito o disco é apagado a cada deploy ou reinício, então **o histórico e os usuários extras somem** (o primeiro usuário é recriado sozinho).
+
+Para guardar de verdade:
+1. No Render, **New → Postgres** (plano gratuito). Atenção: o Postgres gratuito do Render expira depois de um período; confira o prazo no painel.
+2. Copie a **Internal Database URL** e cole em `DATABASE_URL` no Web Service.
+3. As tabelas são criadas sozinhas na primeira subida da API.
+
+Para criar outros usuários (local ou com a `DATABASE_URL` de produção no `.env`):
+
+```bash
+python -m api.usuarios criar professora@escola.sp.gov.br "Maria Lima" --cargo "Coordenação"
+python -m api.usuarios listar
+```
 
 Outras opções com Docker que funcionam do mesmo jeito: Railway, Fly.io e Google Cloud Run.
 

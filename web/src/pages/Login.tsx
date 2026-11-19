@@ -1,19 +1,41 @@
 import { useState, type FormEvent } from 'react'
+import { entrar as entrarNaApi } from '../lib/api'
+import { salvarSessao } from '../lib/sessao'
 import { usePreferencias } from '../lib/usePreferencias'
 import { navegar } from '../lib/rotas'
 import { Logo } from '../components/Layout'
 import { ControlesPreferencias } from '../components/Preferencias'
-import { Botao } from '../components/ui'
+import { Botao, MensagemErro } from '../components/ui'
 
-// Tela visual do protótipo: ainda não há autenticação. "Entrar" só abre o painel.
+// Conta criada na subida da API quando o banco está vazio (ver .env.example). Só aparece rodando localmente.
+const CONTA_LOCAL = { email: 'coordenacao@edupredict.dev', senha: 'edupredict123' }
+
 export function Login() {
   const { t } = usePreferencias()
   const [email, setEmail] = useState('')
   const [senha, setSenha] = useState('')
+  const [enviando, setEnviando] = useState(false)
+  const [erro, setErro] = useState('')
 
-  function entrar(evento: FormEvent) {
+  async function entrar(evento: FormEvent) {
     evento.preventDefault()
-    navegar('visao-geral')
+    setErro('')
+    setEnviando(true)
+    try {
+      const sessao = await entrarNaApi(email, senha)
+      if (!sessao) {
+        setErro(t.login.erro)
+        return
+      }
+      salvarSessao(sessao)
+      // Mesmo já estando em outra rota, força o App a desenhar de novo com a sessão.
+      if (window.location.hash === '#/visao-geral') window.dispatchEvent(new HashChangeEvent('hashchange'))
+      else navegar('visao-geral')
+    } catch (e) {
+      setErro(e instanceof Error ? e.message : t.erros.servidor)
+    } finally {
+      setEnviando(false)
+    }
   }
 
   return (
@@ -34,7 +56,7 @@ export function Login() {
       </section>
 
       <section className="flex flex-1 items-start justify-center px-6 py-10 sm:items-center">
-        <form onSubmit={entrar} className="flex w-full max-w-sm flex-col gap-5">
+        <form onSubmit={(e) => void entrar(e)} className="flex w-full max-w-sm flex-col gap-5">
           <div>
             <h2 className="text-2xl font-bold sm:text-[28px]">{t.login.boasVindas}</h2>
             <p className="mt-2 text-sm text-suave">{t.login.instrucao}</p>
@@ -66,8 +88,14 @@ export function Login() {
               className="min-h-11 rounded-xl border border-borda bg-superficie px-3.5 text-sm text-texto"
             />
           </div>
-          <Botao type="submit">{t.login.entrar}</Botao>
+          {erro && <MensagemErro texto={erro} />}
+          <Botao type="submit" carregando={enviando}>
+            {t.login.entrar}
+          </Botao>
           <p className="text-center text-xs text-suave">{t.login.aviso}</p>
+          {import.meta.env.DEV && (
+            <p className="text-center text-xs text-fraco">{t.login.demo(CONTA_LOCAL.email, CONTA_LOCAL.senha)}</p>
+          )}
         </form>
       </section>
     </div>

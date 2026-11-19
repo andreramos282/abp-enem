@@ -155,6 +155,8 @@ npm run dev   # sobe o front (http://localhost:5173) e a API juntos
 
 Para exibir o mapa, copie `.env.example` para `.env` na raiz e coloque seu token público do Mapbox. Detalhes em [`web/README.md`](web/README.md).
 
+**Login local:** `coordenacao@edupredict.dev` / `edupredict123` (criado sozinho no SQLite `data/edupredict.db` na primeira subida da API). Para outros usuários: `python -m api.usuarios criar email "Nome"`. Em produção, defina `JWT_SECRET`, `ADMIN_EMAIL`, `ADMIN_SENHA` e `DATABASE_URL` (ver [`docs/deploy.md`](docs/deploy.md)).
+
 ### Testes e verificação de estilo
 
 ```bash
@@ -191,4 +193,5 @@ Veja o [CONTRIBUTING.md](CONTRIBUTING.md): preparação do ambiente, padrão de 
 - [x] Análise de viés e explicabilidade (limiar por cor/raça, calibração e SHAP)
 - [x] Painel do município: comparação com estado e Brasil e risco por rede de ensino
 - [x] Análise em lote (planilha CSV) e fatores separados em "ação" e "contexto"
+- [x] Banco de dados (SQLite local / Postgres), login com JWT e histórico de análises
 - [ ] Teste no ENEM 2022 (script pronto: `ml/teste_temporal.py`; falta rodar com os microdados de 2022)

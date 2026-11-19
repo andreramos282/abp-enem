@@ -149,3 +149,17 @@ Campos extras da análise do município (o ENEM 2023 não identifica a escola, e
   `media_uf`, `media_brasil`), calculados na mesma amostra.
 - `por_rede`: risco por rede de ensino no município (`rede_escola`, `rotulo`, `total_alunos`, `percentual_risco`,
   `media`). Aceita `?idioma=en` para os rótulos.
+
+## Login e histórico
+
+- `POST /api/auth/login` com `{ "email": "...", "senha": "..." }` devolve `{ "token": "...", "usuario": {...} }`.
+  `401` se o e-mail ou a senha estiverem errados.
+- Envie o token nas outras chamadas: `Authorization: Bearer <token>`. Ele vale `HORAS_TOKEN` horas (padrão 8).
+- `GET /api/auth/eu`: dados do usuário logado.
+- `GET /api/historico?limite=50`: análises do usuário logado, da mais recente para a mais antiga
+  (`id`, `criado_em`, `perfil`, `previsao`).
+- `DELETE /api/historico/{id}`: apaga uma análise do próprio usuário (`204`; `404` se não for dele).
+- `POST /api/prever` continua aberto (o modelo não guarda nada). Com o token, a análise também vai para o histórico
+  (use `?salvar=false` para só recalcular, sem salvar).
+- Senhas guardadas com scrypt (nunca em texto). Usuários novos: `python -m api.usuarios criar`.
+

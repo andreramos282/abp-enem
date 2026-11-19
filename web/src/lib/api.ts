@@ -1,5 +1,7 @@
 import { obterIdioma, obterLocale } from './idioma-atual'
 import { TEXTOS } from './i18n'
+import { navegar } from './rotas'
+import { encerrarSessao, lerSessao, type Sessao, type Usuario } from './sessao'
 
 // Tipos e chamadas da API. Segue o contrato em docs/api.md.
 
@@ -99,7 +101,7 @@ export interface ResultadoLote {
 
 export const MAX_LOTE = 1000
 
-export type CodigoErro = 'conexao' | 'invalido' | 'naoEncontrado' | 'servidor'
+export type CodigoErro = 'conexao' | 'invalido' | 'naoEncontrado' | 'servidor' | 'sessao'
 
 export class ErroApi extends Error {
   constructor(readonly codigo: CodigoErro) {
@@ -109,27 +111,76 @@ export class ErroApi extends Error {
 
 async function requisitar<T>(caminho: string, init?: RequestInit): Promise<T> {
   const url = `${caminho}${caminho.includes('?') ? '&' : '?'}idioma=${obterIdioma()}`
+  const token = lerSessao()?.token
   let resposta: Response
   try {
     resposta = await fetch(url, {
       ...init,
-      headers: { 'Content-Type': 'application/json', ...init?.headers },
+      headers: {
+        'Content-Type': 'application/json',
+        ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        ...init?.headers,
+      },
     })
   } catch {
     throw new ErroApi('conexao')
   }
+  if (resposta.status === 401 && token) {
+    // Token vencido ou inválido: volta para o login.
+    encerrarSessao()
+    navegar('login')
+    throw new ErroApi('sessao')
+  }
   if (!resposta.ok) {
     throw new ErroApi(resposta.status === 422 ? 'invalido' : resposta.status === 404 ? 'naoEncontrado' : 'servidor')
   }
+  if (resposta.status === 204) return undefined as T
   return (await resposta.json()) as T
+}
+
+// Login: devolve null se o e-mail ou a senha estiverem errados.
+export async function entrar(email: string, senha: string): Promise<Sessao | null> {
+  let resposta: Response
+  try {
+    resposta = await fetch('/api/auth/login', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email, senha }),
+    })
+  } catch {
+    throw new ErroApi('conexao')
+  }
+  if (resposta.status === 401 || resposta.status === 422) return null
+  if (!resposta.ok) throw new ErroApi('servidor')
+  const dados = (await resposta.json()) as { token: string; usuario: Usuario }
+  return { token: dados.token, usuario: dados.usuario }
+}
+
+export interface ItemHistorico {
+  id: number
+  criado_em: string
+  perfil: Perfil
+  previsao: Previsao
+}
+
+export function buscarHistorico(limite = 100) {
+  return requisitar<ItemHistorico[]>(`/api/historico?limite=${limite}`)
+}
+
+export function apagarAnalise(id: number) {
+  return requisitar<void>(`/api/historico/${id}`, { method: 'DELETE' })
 }
 
 export function buscarOpcoes() {
   return requisitar<{ campos: Campo[] }>('/api/opcoes').then((r) => r.campos)
 }
 
-export function preverRisco(perfil: Perfil) {
-  return requisitar<Previsao>('/api/prever', { method: 'POST', body: JSON.stringify(perfil) })
+// salvar=false: só recalcula (ex.: trocar o idioma do resultado) sem criar outra entrada no histórico.
+export function preverRisco(perfil: Perfil, salvar = true) {
+  return requisitar<Previsao>(`/api/prever${salvar ? '' : '?salvar=false'}`, {
+    method: 'POST',
+    body: JSON.stringify(perfil),
+  })
 }
 
 export function preverLote(alunos: Array<Record<string, string | number>>) {
