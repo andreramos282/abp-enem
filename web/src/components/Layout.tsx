@@ -1,5 +1,5 @@
 import type { ReactNode } from 'react'
-import { ClipboardPlus, FileText, GraduationCap, LayoutGrid, LogOut } from 'lucide-react'
+import { ClipboardPlus, FileSpreadsheet, FileText, GraduationCap, LayoutGrid, LogOut } from 'lucide-react'
 import { navegar, type Rota } from '../lib/rotas'
 import { lerAnalise } from '../lib/armazenamento'
 import { usePreferencias } from '../lib/usePreferencias'
@@ -35,6 +35,7 @@ export function Layout({ rota, children }: { rota: Rota; children: ReactNode }) 
   const itens: ItemMenu[] = [
     { rota: 'visao-geral', rotulo: t.nav.visaoGeral, rotuloCurto: t.nav.visaoGeral, icone: LayoutGrid },
     { rota: 'nova-analise', rotulo: t.nav.novaAnalise, rotuloCurto: t.nav.novaAnaliseCurto, icone: ClipboardPlus },
+    { rota: 'lote', rotulo: t.nav.lote, rotuloCurto: t.nav.loteCurto, icone: FileSpreadsheet },
   ]
   if (lerAnalise()) {
     itens.push({ rota: 'resultado', rotulo: t.nav.resultado, rotuloCurto: t.nav.resultadoCurto, icone: FileText })

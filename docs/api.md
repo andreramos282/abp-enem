@@ -82,9 +82,30 @@ Resposta:
 }
 ```
 - `nivel_risco`: `alto` (≥ 50%), `medio` (≥ 25%), `baixo` (< 25%).
+- `fatores[].tipo`: `acao` (a escola ou a família podem atuar) ou `contexto` (cor/raça, sexo e região: o aluno não
+  muda; o site mostra à parte).
 - `impacto`: pontos percentuais. Positivo aumenta o risco; negativo reduz.
 - `acompanhamento_recomendado`: `true` se a probabilidade passa do limiar de acompanhamento. O limiar é ajustado por
   cor/raça para que todos os grupos tenham o mesmo recall (ver `docs/resultados/09_equidade_cor_raca.png`). `null` no mock.
+
+## `POST /api/prever/lote?idioma=pt`
+Risco de vários alunos de uma vez (até 1.000), sem os fatores. Usado pela página "Análise em lote".
+
+Requisição: `{ "alunos": [ { "identificador": "aluno-01", ...mesmos campos de /api/prever } ] }`
+
+Resposta:
+```json
+{
+  "resultados": [
+    { "linha": 1, "identificador": "aluno-01", "probabilidade_risco": 0.327, "nivel_risco": "medio",
+      "acompanhamento_recomendado": true, "erro": null },
+    { "linha": 2, "identificador": "aluno-02", "probabilidade_risco": null, "nivel_risco": null,
+      "acompanhamento_recomendado": null, "erro": "uf_escola: valor inválido (XX)" }
+  ],
+  "modelo": "mlp-20261119"
+}
+```
+Alunos com erro voltam com `erro` preenchido, sem derrubar o lote.
 
 ## `POST /api/municipios/analytics`
 Mesmo formato do protótipo do mapa (EduPredict AI).
@@ -122,3 +143,9 @@ Resposta:
 |---|---|
 | `404` | `/api/municipios/analytics` sem alunos do município na amostra (só com o modelo real) |
 | `422` | Campo faltando, valor fora das opções, UF inválida, campo extra (ex.: uma nota) ou idioma diferente de `pt`/`en` |
+
+Campos extras da análise do município (o ENEM 2023 não identifica a escola, então `escolas` vem vazio):
+- `comparacao`: risco previsto e média do estado e do Brasil (`percentual_risco_uf`, `percentual_risco_brasil`,
+  `media_uf`, `media_brasil`), calculados na mesma amostra.
+- `por_rede`: risco por rede de ensino no município (`rede_escola`, `rotulo`, `total_alunos`, `percentual_risco`,
+  `media`). Aceita `?idioma=en` para os rótulos.

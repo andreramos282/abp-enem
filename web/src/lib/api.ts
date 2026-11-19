@@ -27,6 +27,8 @@ export interface Fator {
   variavel: string
   descricao: string
   impacto: number
+  // acao: a escola ou a família podem atuar; contexto: o aluno não muda (cor/raça, sexo, região)
+  tipo?: 'acao' | 'contexto'
 }
 
 export interface Previsao {
@@ -66,8 +68,36 @@ export interface AnaliseMunicipio {
     percentual_risco_municipio: number
   }
   escolas: EscolaResumo[]
+  comparacao?: Comparacao | null
+  por_rede?: RiscoPorRede[]
   modelo: string
 }
+
+export interface Comparacao {
+  percentual_risco_uf: number
+  percentual_risco_brasil: number
+  media_uf: number
+  media_brasil: number
+}
+
+export interface RiscoPorRede {
+  rede_escola: number
+  rotulo: string
+  total_alunos: number
+  percentual_risco: number
+  media: number
+}
+
+export interface ResultadoLote {
+  linha: number
+  identificador: string | null
+  probabilidade_risco: number | null
+  nivel_risco: NivelRisco | null
+  acompanhamento_recomendado: boolean | null
+  erro: string | null
+}
+
+export const MAX_LOTE = 1000
 
 export type CodigoErro = 'conexao' | 'invalido' | 'naoEncontrado' | 'servidor'
 
@@ -100,6 +130,13 @@ export function buscarOpcoes() {
 
 export function preverRisco(perfil: Perfil) {
   return requisitar<Previsao>('/api/prever', { method: 'POST', body: JSON.stringify(perfil) })
+}
+
+export function preverLote(alunos: Array<Record<string, string | number>>) {
+  return requisitar<{ resultados: ResultadoLote[]; modelo: string }>('/api/prever/lote', {
+    method: 'POST',
+    body: JSON.stringify({ alunos }),
+  })
 }
 
 export function analisarMunicipio(municipio: string, uf: string) {

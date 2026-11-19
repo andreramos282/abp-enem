@@ -94,7 +94,16 @@ def test_api_com_modelo_real(modelo_treinado, monkeypatch):
 
         municipio = cliente.post("/api/municipios/analytics", json={"municipio": "Jacareí", "uf": "SP"})
         assert municipio.status_code == 200
-        assert municipio.json()["estatisticas_gerais"]["total_alunos_avaliados"] > 0
+        dados = municipio.json()
+        assert dados["estatisticas_gerais"]["total_alunos_avaliados"] > 0
+        assert dados["comparacao"]["percentual_risco_uf"] > 0
+        assert (
+            sum(r["total_alunos"] for r in dados["por_rede"]) == dados["estatisticas_gerais"]["total_alunos_avaliados"]
+        )
+
+        lote = cliente.post("/api/prever/lote", json={"alunos": [vulneravel, favorecido]}).json()["resultados"]
+        assert lote[0]["probabilidade_risco"] == p_v["probabilidade_risco"]
+        assert all(isinstance(f["tipo"], str) for f in p_v["fatores"])
 
         inexistente = cliente.post("/api/municipios/analytics", json={"municipio": "Cidade Inexistente", "uf": "SP"})
         assert inexistente.status_code == 404
