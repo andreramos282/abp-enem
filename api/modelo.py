@@ -14,6 +14,9 @@ escola, então a lista de escolas fica vazia com esta base.
 
 from __future__ import annotations
 
+import contextlib
+import ctypes
+import gc
 import json
 import math
 from pathlib import Path
@@ -43,7 +46,7 @@ IMPACTO_MINIMO = 0.5  # pontos percentuais
 MAX_FATORES = 6  # fatores em que a escola ou a família podem atuar
 MAX_CONTEXTO = 3  # fatores de contexto (o aluno não muda): mostrados à parte
 GRUPOS_CONTEXTO = {"cor_raca", "sexo", "regiao"}
-BLOCO_PREVISAO = 20_000  # linhas por vez ao prever a amostra inteira (limita o pico de memória)
+BLOCO_PREVISAO = 10_000  # linhas por vez ao prever a amostra inteira (limita o pico de memória)
 
 
 class PreditorModelo:
@@ -160,6 +163,7 @@ class PreditorModelo:
             self._por_uf = df.groupby("_uf", observed=True)[["_risco", "_media"]].mean()
             self._brasil = (float(df["_risco"].mean()), float(df["_media"].mean()))
             self._amostra = df
+            _devolver_memoria()
         return self._amostra
 
     def analisar_municipio(self, municipio: str, uf: str, idioma: Idioma = "pt") -> AnaliseMunicipio:
@@ -228,6 +232,13 @@ class PreditorModelo:
             por_rede=por_rede,
             modelo=self.nome,
         )
+
+
+def _devolver_memoria() -> None:
+    """Devolve ao sistema a memória liberada depois de carregar a amostra (ajuda no plano de 512 MB)."""
+    gc.collect()
+    with contextlib.suppress(OSError, AttributeError):  # fora do Linux/glibc não há malloc_trim
+        ctypes.CDLL("libc.so.6").malloc_trim(0)
 
 
 def _igual(a, b) -> bool:

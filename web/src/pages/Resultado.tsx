@@ -80,7 +80,7 @@ export function Resultado() {
     if (!analise || analise.idioma === idioma) return
     let cancelado = false
     setAtualizando(true)
-    Promise.all([preverRisco(analise.perfil), buscarOpcoes()])
+    Promise.all([preverRisco(analise.perfil, false), buscarOpcoes()])
       .then(([previsao, campos]) => {
         if (cancelado) return
         const atualizada = { ...analise, previsao, idioma, rotulos: rotulosDoPerfil(campos, analise.valores) }

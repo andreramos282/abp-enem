@@ -7,6 +7,8 @@ import { Login } from './pages/Login'
 import { NovaAnalise } from './pages/NovaAnalise'
 import { Resultado } from './pages/Resultado'
 import { Lote } from './pages/Lote'
+import { Historico } from './pages/Historico'
+import { lerSessao } from './lib/sessao'
 import { VisaoGeral } from './pages/VisaoGeral'
 
 function Rotas() {
@@ -17,7 +19,8 @@ function Rotas() {
     document.title = `${t.titulos[rota]} · ${t.marca}`
   }, [rota, t])
 
-  if (rota === 'login') return <Login />
+  // Sem login, qualquer página leva à tela de entrada.
+  if (rota === 'login' || !lerSessao()) return <Login />
 
   return (
     <Layout rota={rota}>
@@ -25,6 +28,7 @@ function Rotas() {
       {rota === 'nova-analise' && <NovaAnalise />}
       {rota === 'resultado' && <Resultado />}
       {rota === 'lote' && <Lote />}
+      {rota === 'historico' && <Historico />}
     </Layout>
   )
 }

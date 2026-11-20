@@ -6,6 +6,7 @@ em docs/api.md.
 
 from __future__ import annotations
 
+from datetime import datetime
 from typing import Literal
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator
@@ -179,6 +180,33 @@ class AnaliseMunicipio(BaseModel):
     comparacao: Comparacao | None = None
     por_rede: list[RiscoPorRede] = Field(default_factory=list)
     modelo: str
+
+
+# ---------------------------------------------------------------------------
+# Login e histórico
+# ---------------------------------------------------------------------------
+class LoginRequisicao(BaseModel):
+    email: str = Field(min_length=3, max_length=200)
+    senha: str = Field(min_length=1, max_length=200)
+
+
+class UsuarioPublico(BaseModel):
+    id: int
+    nome: str
+    email: str
+    cargo: str
+
+
+class RespostaLogin(BaseModel):
+    token: str
+    usuario: UsuarioPublico
+
+
+class ItemHistorico(BaseModel):
+    id: int
+    criado_em: datetime
+    perfil: dict
+    previsao: Previsao
 
 
 # ---------------------------------------------------------------------------
