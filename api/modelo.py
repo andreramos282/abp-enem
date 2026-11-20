@@ -38,6 +38,7 @@ from .schemas import (
     Fator,
     PerfilAluno,
     Previsao,
+    ResumoModelo,
     RiscoPorRede,
 )
 from .traducoes import FATORES, OPCOES, REDE_NAO_INFORMADA, REGIOES, Idioma, formatar_reais
@@ -50,6 +51,7 @@ GRUPOS_CONTEXTO = {"cor_raca", "sexo", "regiao"}
 
 class PreditorModelo:
     def __init__(self, pasta_modelo: Path, caminho_amostra: Path | None = None, caminho_risco: Path | None = None):
+        self.pasta_modelo = pasta_modelo
         self.pipeline = joblib.load(pasta_modelo / "pipeline.pkl")
         self.metadados = json.loads((pasta_modelo / "metadados.json").read_text(encoding="utf-8"))
         self.nome = self.metadados.get("versao", "modelo")
@@ -109,6 +111,26 @@ class PreditorModelo:
             fatores=acao + contexto,
             acompanhamento_recomendado=self._acompanhamento(probabilidade, perfil),
             modelo=self.nome,
+        )
+
+    def resumo(self) -> ResumoModelo:
+        m = self.metadados
+        teste = m["resultados"][m["modelo"]]["teste"]
+        outro = sorted(self.pasta_modelo.glob("teste_temporal_*.json"))
+        temporal = json.loads(outro[-1].read_text(encoding="utf-8")) if outro else None
+        return ResumoModelo(
+            modelo=self.nome,
+            simulado=False,
+            treinado_em=m.get("treinado_em"),
+            ano_dados=m.get("ano_dados"),
+            alunos_amostra=m["amostra"]["total"],
+            corte_media=m["alvo"]["corte_media"],
+            auc_teste=teste["auc"],
+            recall_teste=teste["recall"],
+            auc_outro_ano=temporal["teste"]["auc"] if temporal else None,
+            outro_ano=temporal["ano"] if temporal else None,
+            calibracao_erro_medio=(m.get("calibracao") or {}).get("erro_medio"),
+            importancia=(m.get("importancia_shap") or {}).get("pontos_percentuais", {}),
         )
 
     def prever_lote(self, perfis: list[PerfilAluno]) -> list[Previsao]:
