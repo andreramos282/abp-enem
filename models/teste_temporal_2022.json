@@ -1,0 +1,101 @@
+{
+  "ano": 2022,
+  "modelo": "mlp-20261119",
+  "alunos": 200000,
+  "corte_media": 488.6,
+  "limiar": 0.2647,
+  "teste": {
+    "auc": 0.773,
+    "f1": 0.533,
+    "precisao": 0.4474,
+    "recall": 0.659,
+    "acuracia": 0.7114,
+    "taxa_real_risco": 0.2499,
+    "risco_medio_previsto": 0.2303,
+    "falso_positivo": 0.2712,
+    "matriz_confusao": {
+      "vn": 109331,
+      "fp": 40682,
+      "fn": 17044,
+      "vp": 32943
+    }
+  },
+  "referencia_2023": {
+    "auc": 0.7631,
+    "f1": 0.5251,
+    "precisao": 0.4267,
+    "recall": 0.6824,
+    "acuracia": 0.693,
+    "taxa_real_risco": 0.2487,
+    "risco_medio_previsto": 0.2402,
+    "falso_positivo": 0.3035,
+    "matriz_confusao": {
+      "vn": 41864,
+      "fp": 18240,
+      "fn": 6319,
+      "vp": 13577
+    }
+  },
+  "vies": {
+    "cor_raca": {
+      "0": {
+        "n": 3521,
+        "taxa_real_risco": 0.338,
+        "taxa_prevista_risco": 0.5623,
+        "recall": 0.8109,
+        "falso_positivo": 0.4354
+      },
+      "1": {
+        "n": 91513,
+        "taxa_real_risco": 0.1613,
+        "taxa_prevista_risco": 0.1571,
+        "recall": 0.3852,
+        "falso_positivo": 0.1132
+      },
+      "2": {
+        "n": 20097,
+        "taxa_real_risco": 0.328,
+        "taxa_prevista_risco": 0.595,
+        "recall": 0.8025,
+        "falso_positivo": 0.4938
+      },
+      "3": {
+        "n": 80297,
+        "taxa_real_risco": 0.3231,
+        "taxa_prevista_risco": 0.5303,
+        "recall": 0.7595,
+        "falso_positivo": 0.421
+      },
+      "4": {
+        "n": 3552,
+        "taxa_real_risco": 0.2759,
+        "taxa_prevista_risco": 0.5225,
+        "recall": 0.8245,
+        "falso_positivo": 0.4075
+      },
+      "5": {
+        "n": 1020,
+        "taxa_real_risco": 0.5098,
+        "taxa_prevista_risco": 0.8549,
+        "recall": 0.9462,
+        "falso_positivo": 0.76
+      }
+    },
+    "sexo": {
+      "F": {
+        "n": 119063,
+        "taxa_real_risco": 0.2635,
+        "taxa_prevista_risco": 0.3886,
+        "recall": 0.6761,
+        "falso_positivo": 0.2857
+      },
+      "M": {
+        "n": 80937,
+        "taxa_real_risco": 0.23,
+        "taxa_prevista_risco": 0.338,
+        "recall": 0.6302,
+        "falso_positivo": 0.2508
+      }
+    }
+  }
+}
