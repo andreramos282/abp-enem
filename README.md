@@ -67,6 +67,17 @@ O modelo generaliza para qualquer região (perde no máximo 0,005 de AUC), mas e
 - **Calibração:** o risco previsto bate com o real (diferença média de 1,1 ponto percentual, Brier 0,156). Quando o site mostra 30% de risco, cerca de 30% desses alunos estão de fato no quartil inferior. Não foi preciso recalibrar.
 - **Importância das variáveis (SHAP):** as que mais pesam são renda per capita, rede da escola, faixa etária e computador em casa. Cor/raça vem em 5º lugar e sexo quase não pesa.
 
+### Teste em outro ano (ENEM 2022)
+
+O modelo treinado com 2023 foi aplicado, sem ajuste nenhum, a 200 mil concluintes do ENEM 2022 (sorteados entre 909.625 que fizeram a prova completa). O alvo usa o quartil inferior do próprio ano (média abaixo de 488,6).
+
+| | AUC | F1 | Recall | Falso positivo |
+| --- | --- | --- | --- | --- |
+| ENEM 2023 (teste) | 0,763 | 0,525 | 68% | 30% |
+| ENEM 2022 | 0,773 | 0,533 | 66% | 27% |
+
+O desempenho se mantém em outra edição da prova: o modelo não decorou 2023. As faixas de renda do questionário são em salários mínimos nos dois anos (conferido no dicionário de 2022). Resultado completo em `models/teste_temporal_2022.json`.
+
 ### Comparação dos modelos (com cor/raça e sexo)
 
 | Modelo | AUC (teste) | F1 | Recall |
@@ -194,4 +205,4 @@ Veja o [CONTRIBUTING.md](CONTRIBUTING.md): preparação do ambiente, padrão de 
 - [x] Painel do município: comparação com estado e Brasil e risco por rede de ensino
 - [x] Análise em lote (planilha CSV) e fatores separados em "ação" e "contexto"
 - [x] Banco de dados (SQLite local / Postgres), login com JWT e histórico de análises
-- [ ] Teste no ENEM 2022 (script pronto: `ml/teste_temporal.py`; falta rodar com os microdados de 2022)
+- [x] Teste no ENEM 2022 (AUC 0,773)
