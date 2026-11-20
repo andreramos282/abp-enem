@@ -27,6 +27,8 @@ ROTULOS_CAMPOS: dict[Idioma, dict[str, str]] = {
         "localizacao_escola": "Localização da escola",
         "uf_escola": "Estado (UF)",
         "faixa_etaria": "Faixa etária",
+        "sexo": "Sexo",
+        "cor_raca": "Cor/raça (autodeclarada)",
     },
     "en": {
         "renda_familiar": "Monthly family income",
@@ -42,6 +44,8 @@ ROTULOS_CAMPOS: dict[Idioma, dict[str, str]] = {
         "localizacao_escola": "School location",
         "uf_escola": "State (UF)",
         "faixa_etaria": "Age group",
+        "sexo": "Sex",
+        "cor_raca": "Race/color (self-declared)",
     },
 }
 
@@ -102,6 +106,8 @@ OPCOES: dict[Idioma, dict[str, dict]] = {
         "rede_escola": c.REDE_ESCOLA,
         "localizacao_escola": c.LOCALIZACAO_ESCOLA,
         "faixa_etaria": c.FAIXA_ETARIA,
+        "cor_raca": {0: "Prefiro não declarar", 1: "Branca", 2: "Preta", 3: "Parda", 4: "Amarela", 5: "Indígena"},
+        "sexo": c.SEXO,
         "pessoas": {n: f"{n} pessoa" if n == 1 else f"{n} pessoas" for n in range(1, 21)},
     },
     "en": {
@@ -114,6 +120,8 @@ OPCOES: dict[Idioma, dict[str, dict]] = {
         "rede_escola": {1: "Federal", 2: "State", 3: "Municipal", 4: "Private"},
         "localizacao_escola": {1: "Urban", 2: "Rural"},
         "faixa_etaria": _FAIXA_ETARIA_EN,
+        "cor_raca": {0: "Prefer not to say", 1: "White", 2: "Black", 3: "Brown (pardo)", 4: "Asian", 5: "Indigenous"},
+        "sexo": {"F": "Female", "M": "Male"},
         "pessoas": {n: f"{n} person" if n == 1 else f"{n} people" for n in range(1, 21)},
     },
 }
@@ -135,6 +143,8 @@ FATORES: dict[Idioma, dict[str, str]] = {
         "ocupacao_pai": "Ocupação do pai: {valor}",
         "regiao": "Escola na região {valor}",
         "bens": "Bens e conforto no domicílio",
+        "cor_raca": "Cor/raça autodeclarada: {valor}",
+        "sexo": "Sexo: {valor}",
     },
     "en": {
         "renda_per_capita": "Per capita income of about R$ {valor}",
@@ -151,6 +161,8 @@ FATORES: dict[Idioma, dict[str, str]] = {
         "ocupacao_pai": "Father's occupation: {valor}",
         "regiao": "School in the {valor} region",
         "bens": "Household goods and comfort",
+        "cor_raca": "Self-declared race/color: {valor}",
+        "sexo": "Sex: {valor}",
     },
 }
 

@@ -25,6 +25,8 @@ def montar_opcoes(idioma: Idioma = "pt") -> OpcoesFormulario:
         "localizacao_escola": opcoes["localizacao_escola"],
         "uf_escola": {uf: uf for uf in c.UFS},
         "faixa_etaria": opcoes["faixa_etaria"],
+        "sexo": opcoes["sexo"],
+        "cor_raca": opcoes["cor_raca"],
     }
     return OpcoesFormulario(
         campos=[

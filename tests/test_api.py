@@ -16,6 +16,8 @@ PERFIL = {
     "localizacao_escola": 1,
     "uf_escola": "SP",
     "faixa_etaria": 2,
+    "cor_raca": 3,
+    "sexo": "F",
 }
 
 
@@ -73,6 +75,19 @@ def test_perfil_mais_vulneravel_tem_mais_risco():
 def test_prever_rejeita_notas_na_entrada():
     with cliente() as c:
         resposta = c.post("/api/prever", json={**PERFIL, "NU_NOTA_MT": 600})
+    assert resposta.status_code == 422
+
+
+def test_prever_aceita_perfil_sem_cor_e_sexo():
+    perfil = {k: v for k, v in PERFIL.items() if k not in {"cor_raca", "sexo"}}
+    with cliente() as c:
+        resposta = c.post("/api/prever", json=perfil)
+    assert resposta.status_code == 200
+
+
+def test_prever_rejeita_cor_invalida():
+    with cliente() as c:
+        resposta = c.post("/api/prever", json={**PERFIL, "cor_raca": 9})
     assert resposta.status_code == 422
 
 

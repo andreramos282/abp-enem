@@ -12,10 +12,10 @@ Plataforma de inteligência educacional para secretarias de educação e escolas
 | Tipo | Classificação binária |
 | População | Concluintes do ensino médio (`TP_ST_CONCLUSAO = 2`), presentes nas 4 provas e com redação válida |
 | Alvo | `1` se a média das 5 notas estiver no **quartil inferior** (corte calculado só no treino) |
-| Entradas | Escolaridade e ocupação dos pais, pessoas na casa, renda (e renda per capita), computador, internet, índice de bens, tipo/rede/localização da escola, região e faixa etária |
-| Fora do modelo | **Notas** (só criam o alvo) · **cor/raça e sexo** (usados apenas na análise de viés) |
+| Entradas | Escolaridade e ocupação dos pais, pessoas na casa, renda (e renda per capita), computador, internet, índice de bens, tipo/rede/localização da escola, região, faixa etária, **cor/raça e sexo** |
+| Fora do modelo | **Notas** (só criam o alvo) |
 | Amostra | ~400 mil alunos, estratificada por região e tipo de escola, em Parquet, `random_state=42` |
-| Validação | 80/20 estratificado + GridSearchCV (5 folds) no treino · teste extra deixando uma região de fora |
+| Validação | 70/10/20 estratificado + GridSearchCV (5 folds) no treino · testes iniciais com e sem o Nordeste e com e sem cor/raça e sexo |
 | Métricas | AUC (principal), F1 e recall da classe de risco |
 | Modelos | Regressão Logística (baseline), Árvore de Decisão, Random Forest, Gradient Boosting (HistGradientBoosting, no lugar do XGBoost para evitar outra dependência) e MLP |
 
@@ -25,20 +25,43 @@ Todos os nomes de colunas do INEP ficam em [`ml/colunas_2023.py`](ml/colunas_202
 
 ## Resultados com os dados reais (ENEM 2023)
 
-Treino em 5 de novembro de 2026 com uma amostra estratificada de **399.998 concluintes**, tirada de 1.008.062 concluintes válidos.
+Treino em 19 de novembro de 2026 com uma amostra estratificada de **399.998 concluintes**, tirada de 1.008.062 concluintes válidos. Gráficos em [`docs/resultados/`](docs/resultados/).
+
+### Testes iniciais
+
+Feitos antes da comparação dos modelos, com a mesma rede neural e o mesmo conjunto de teste.
+
+**Treino com e sem o Nordeste**, avaliando nos 17.607 alunos do Nordeste do teste:
+
+| Treino | AUC | Recall | Falso positivo | Risco real | Risco previsto (médio) |
+| --- | --- | --- | --- | --- | --- |
+| Com o Nordeste | 0,773 | 83% | 43% | 29,0% | 30,0% |
+| Sem o Nordeste | 0,768 | 92% | 57% | 29,0% | 32,3% |
+
+O modelo funciona numa região que nunca viu (AUC cai só 0,005), mas superestima o risco lá e aponta mais alunos por engano. Treinar com todas as regiões é melhor.
+
+**Com e sem cor/raça e sexo:**
+
+| Modelo | AUC | Falso positivo: brancos | pretos | pardos | indígenas |
+| --- | --- | --- | --- | --- | --- |
+| Com cor/raça e sexo (usado no site) | 0,763 | 17% | 58% | 51% | 85% |
+| Sem cor/raça e sexo | 0,760 | 19% | 43% | 42% | 55% |
+
+Cor/raça e sexo melhoram a AUC em só **0,004**, e o modelo passa a apontar por engano muito mais alunos pretos, pardos e indígenas que não estão em risco. Isso precisa ser declarado no relatório: são dados sensíveis (LGPD, art. 11) e o resultado deve apoiar a decisão pedagógica, nunca rotular o aluno.
+
+### Comparação dos modelos (com cor/raça e sexo)
 
 | Modelo | AUC (teste) | F1 | Recall |
 | --- | --- | --- | --- |
-| Regressão logística (baseline) | 0,755 | 0,518 | 69% |
-| Árvore de decisão | 0,747 | 0,513 | 76% |
-| Random forest | 0,760 | 0,523 | 72% |
-| Gradient boosting | 0,762 | 0,525 | 71% |
-| **Rede neural (MLP)** (escolhida) | **0,760** | 0,521 | 67% |
+| Regressão logística (baseline) | 0,758 | 0,523 | 73% |
+| Árvore de decisão | 0,754 | 0,518 | 72% |
+| Random forest | 0,763 | 0,526 | 72% |
+| Gradient boosting | 0,765 | 0,529 | 70% |
+| **Rede neural (MLP)** (escolhida) | **0,763** | 0,525 | 68% |
 
-- **Modelo escolhido: rede neural (MLP)**, camadas de 64 e 32 neurônios, como previsto no relatório da Sprint 1. A diferença para o melhor modelo (gradient boosting) é de só 0,002 de AUC.
+- **Modelo escolhido: rede neural (MLP)**, camadas de 128 e 64 neurônios, como previsto no relatório da Sprint 1. A diferença para o melhor modelo (gradient boosting) é de 0,002 de AUC.
 - **Corte do quartil inferior:** média das 5 notas abaixo de **481,0**.
-- **Teste sem a região Nordeste:** AUC 0,772. O modelo generaliza para uma região que não viu no treino.
-- **Análise de viés:** mesmo sem cor/raça e sexo como entrada, o modelo aponta mais falsos positivos entre alunos pretos (43%) e pardos (42%) do que entre brancos (19%), e encontra menos alunos brancos que estão de fato em risco (recall de 52% contra 72–74%). Isso acompanha as diferenças reais de desempenho (risco real de 16% entre brancos e 32–34% entre pretos e pardos), mas é uma limitação a declarar: o resultado deve apoiar a decisão pedagógica, nunca rotular o aluno.
+- **Viés por sexo:** pequeno (falso positivo de 32% no feminino e 28% no masculino).
 
 Detalhes em [`models/relatorio_treino.md`](models/relatorio_treino.md) e análise exploratória em [`docs/eda/`](docs/eda/README.md).
 
@@ -90,11 +113,11 @@ Se existir um modelo treinado em `models/pipeline.pkl`, a API usa o modelo. Sen�
    ```
 3. Treine e compare os modelos:
    ```bash
-   python -m ml.treinar --teste-regiao Nordeste
+   python -m ml.treinar   # testes iniciais com e sem o Nordeste (mude com --teste-regiao)
    # para salvar a rede neural mesmo que outro modelo tenha AUC maior:
    python -m ml.treinar --escolher mlp
    ```
-4. O resultado fica em `models/`: `pipeline.pkl` (modelo), `metadados.json` (corte, métricas, análise de viés) e `relatorio_treino.md` (tabelas prontas para o relatório da sprint).
+4. O resultado fica em `models/`: `pipeline.pkl` (modelo), `metadados.json` (corte, métricas, testes iniciais, análise de viés) e `relatorio_treino.md` (tabelas prontas para o relatório da sprint). Os gráficos vão para `docs/resultados/` (refaça só os gráficos com `python -m ml.graficos`).
 5. Reinicie a API: ela passa a usar o modelo treinado automaticamente.
 
 Para testar o fluxo sem os dados reais: `python -m tests.sintetico data/MICRODADOS_ENEM_2023_SINTETICO.csv` gera um arquivo falso no mesmo layout.
@@ -137,6 +160,7 @@ Veja o [CONTRIBUTING.md](CONTRIBUTING.md): preparação do ambiente, padrão de 
 - [x] Script de amostragem do ENEM 2023
 - [x] Amostragem com os microdados reais e EDA (`python -m ml.eda`)
 - [x] Script de treino: baselines, MLP, GridSearchCV, limiar, viés e teste por região
+- [x] Cor/raça e sexo no modelo, testes iniciais (com e sem Nordeste, com e sem cor/raça e sexo) e gráficos
 - [x] Treino com os dados reais (AUC 0,76)
 - [x] Modelo final: rede neural (MLP)
 - [x] Modelo (`models/pipeline.pkl`) e amostra (`data/amostra_enem_2023.parquet`) versionados no repositório

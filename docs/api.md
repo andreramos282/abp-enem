@@ -59,10 +59,15 @@ Requisição:
   "localizacao_escola": 1,
   "uf_escola": "SP",
   "faixa_etaria": 2,
+  "cor_raca": 3,
+  "sexo": "F",
   "bens": { "Q008": "B", "Q010": "A" }
 }
 ```
-`bens` é opcional (itens Q007 a Q023).
+- `cor_raca` (0 não declarada, 1 branca, 2 preta, 3 parda, 4 amarela, 5 indígena) e `sexo` (`F`/`M`) seguem o
+  dicionário do ENEM 2023. São opcionais: sem eles, o modelo trata como "não declarado". São dados sensíveis (LGPD,
+  art. 11); o efeito deles no modelo está em `docs/resultados/`.
+- `bens` é opcional (itens Q007 a Q023).
 
 Resposta:
 ```json

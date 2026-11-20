@@ -3,16 +3,19 @@
 Uso:
     python -m ml.treinar
     python -m ml.treinar --amostra data/amostra_enem_2023.parquet --amostra-grid 100000
-    python -m ml.treinar --modelos regressao_logistica mlp --teste-regiao Nordeste
+    python -m ml.treinar --modelos regressao_logistica mlp --escolher mlp --teste-regiao Nordeste
 
 Etapas:
 1. Divide treino (70%), validação (10%) e teste (20%), estratificado.
 2. Calcula o corte do quartil inferior SÓ no treino e cria o alvo.
-3. Ajusta cada modelo com GridSearchCV (5 folds, AUC) no treino.
-4. Escolhe o limiar de decisão na validação (maior F1).
-5. Avalia no teste e por grupo de cor/raça e sexo (análise de viés).
-6. Salva o melhor modelo em models/pipeline.pkl, com models/metadados.json
-   e um resumo em models/relatorio_treino.md para o relatório da sprint.
+3. Testes iniciais, com o mesmo modelo e os mesmos dados de teste:
+   a) treino COM e SEM a região escolhida (padrão: Nordeste), avaliando nos alunos dessa região;
+   b) treino COM e SEM cor/raça e sexo, comparando desempenho e viés.
+4. Ajusta cada modelo com GridSearchCV (5 folds, AUC) no treino.
+5. Escolhe o limiar de decisão na validação (maior F1).
+6. Avalia no teste e por grupo de cor/raça e sexo (análise de viés).
+7. Salva o melhor modelo em models/pipeline.pkl, com models/metadados.json,
+   um resumo em models/relatorio_treino.md e os gráficos em docs/resultados/.
 """
 
 from __future__ import annotations
@@ -39,6 +42,7 @@ from sklearn.metrics import (
     precision_score,
     recall_score,
     roc_auc_score,
+    roc_curve,
 )
 from sklearn.model_selection import GridSearchCV, StratifiedKFold, train_test_split
 from sklearn.neural_network import MLPClassifier
@@ -75,10 +79,14 @@ MODELOS = {
 }
 
 
+# Parâmetros usados nos testes iniciais (melhores da busca em grade do treino anterior).
+PARAMETROS_TESTES = {"mlp": {"modelo__hidden_layer_sizes": (64, 32), "modelo__alpha": 1e-3}}
+
+
 def preparar(caminho: Path) -> tuple[pd.DataFrame, pd.Series, pd.DataFrame]:
     df = renomear_microdados(carregar(caminho))
     entradas = [col for col in [*ENTRADAS, *c.BENS] if col in df.columns]
-    vies = df[[col for col in c.VARIAVEIS_ANALISE_VIES if col in df.columns]]
+    vies = df[[col for col in c.VARIAVEIS_ANALISE_VIES if col in df.columns]].copy()
     return df[entradas], df["media_notas"].astype(float), vies
 
 
@@ -97,6 +105,9 @@ def metricas(y: np.ndarray, prob: np.ndarray, limiar: float) -> dict:
         "precisao": round(float(precision_score(y, pred, zero_division=0)), 4),
         "recall": round(float(recall_score(y, pred, zero_division=0)), 4),
         "acuracia": round(float(accuracy_score(y, pred)), 4),
+        "taxa_real_risco": round(float(np.mean(y)), 4),
+        "risco_medio_previsto": round(float(np.mean(prob)), 4),
+        "falso_positivo": round(float(fp / (fp + vn)), 4) if fp + vn else None,
         "matriz_confusao": {"vn": int(vn), "fp": int(fp), "fn": int(fn), "vp": int(vp)},
     }
 
@@ -131,21 +142,6 @@ def perfil_referencia(X: pd.DataFrame) -> dict:
         valor = None if moda.empty else moda.iloc[0]
         referencia[coluna] = valor.item() if hasattr(valor, "item") else valor
     return referencia
-
-
-def teste_por_regiao(X, media, regiao_fora: str, modelo, params) -> dict:
-    regioes = X["uf_escola"].astype("string").str.upper().map(c.REGIAO_POR_UF)
-    dentro = regioes != regiao_fora
-    corte = float(media[dentro].quantile(c.QUANTIL_RISCO))
-    y = (media < corte).astype(int).to_numpy()
-    pipe = construir_pipeline(clone(modelo)).set_params(**params)
-    pipe.fit(X[dentro], y[dentro.to_numpy()])
-    prob = pipe.predict_proba(X[~dentro])[:, 1]
-    return {
-        "regiao_teste": regiao_fora,
-        "n_teste": int((~dentro).sum()),
-        "auc": round(float(roc_auc_score(y[~dentro.to_numpy()], prob)), 4),
-    }
 
 
 @dataclass
@@ -201,6 +197,96 @@ def dividir(X: pd.DataFrame, media: pd.Series) -> Divisao:
     )
 
 
+def _regiao(X: pd.DataFrame) -> np.ndarray:
+    return X["uf_escola"].astype("string").str.upper().map(c.REGIAO_POR_UF).fillna("NI").to_numpy()
+
+
+def _ajustar(nome: str, params: dict, X: pd.DataFrame, y: np.ndarray, sensiveis: bool = True) -> Pipeline:
+    pipe = construir_pipeline(clone(MODELOS[nome][0]), sensiveis=sensiveis).set_params(**params)
+    return pipe.fit(X, y)
+
+
+def testes_iniciais(d: Divisao, vies: pd.DataFrame, nome: str, regiao: str) -> dict:
+    """Comparações feitas antes da escolha do modelo, todas avaliadas no MESMO conjunto de teste.
+
+    - Região: um modelo treinado com todo o Brasil e outro treinado SEM a região, os dois avaliados
+      nos alunos da região. Mostra se o modelo funciona numa região que ele nunca viu.
+    - Cor/raça e sexo: um modelo com e outro sem essas variáveis. Mostra quanto elas acrescentam
+      ao desempenho e como mudam o viés.
+    O limiar de cada modelo é escolhido na validação, com os mesmos dados usados no treino dele.
+    """
+    params = PARAMETROS_TESTES.get(nome, {})
+    reg_aj, reg_val, reg_te = _regiao(d.X_ajuste), _regiao(d.X_validacao), _regiao(d.X_teste)
+    na_regiao = reg_te == regiao
+    vies_teste = vies.loc[d.idx_teste].reset_index(drop=True)
+
+    def avaliar(pipe: Pipeline, limiar: float, mascara: np.ndarray | None = None) -> dict:
+        prob = pipe.predict_proba(d.X_teste)[:, 1]
+        if mascara is None:
+            return metricas(d.y_teste, prob, limiar)
+        return metricas(d.y_teste[mascara], prob[mascara], limiar)
+
+    inicio = time.time()
+    print(f"Testes iniciais com {nome} {params or ''}")
+
+    com = _ajustar(nome, params, d.X_ajuste, d.y_ajuste)
+    limiar_com = limiar_maior_f1(d.y_validacao, com.predict_proba(d.X_validacao)[:, 1])
+
+    fora_aj, fora_val = reg_aj != regiao, reg_val != regiao
+    sem_regiao = _ajustar(nome, params, d.X_ajuste[fora_aj], d.y_ajuste[fora_aj])
+    limiar_sem_regiao = limiar_maior_f1(
+        d.y_validacao[fora_val], sem_regiao.predict_proba(d.X_validacao[fora_val])[:, 1]
+    )
+    regiao_resultado = {
+        "regiao": regiao,
+        "n_teste_regiao": int(na_regiao.sum()),
+        "n_treino_com": len(d.X_ajuste),
+        "n_treino_sem": int(fora_aj.sum()),
+        "com_regiao": {
+            "na_regiao": avaliar(com, limiar_com, na_regiao),
+            "outras_regioes": avaliar(com, limiar_com, ~na_regiao),
+        },
+        "sem_regiao": {
+            "na_regiao": avaliar(sem_regiao, limiar_sem_regiao, na_regiao),
+            "outras_regioes": avaliar(sem_regiao, limiar_sem_regiao, ~na_regiao),
+        },
+    }
+    a, b = regiao_resultado["com_regiao"]["na_regiao"], regiao_resultado["sem_regiao"]["na_regiao"]
+    print(f"  {regiao}: AUC treino com a região {a['auc']:.3f} · sem a região {b['auc']:.3f}")
+
+    sem_sens = _ajustar(nome, params, d.X_ajuste, d.y_ajuste, sensiveis=False)
+    limiar_sem_sens = limiar_maior_f1(d.y_validacao, sem_sens.predict_proba(d.X_validacao)[:, 1])
+    prob_com = com.predict_proba(d.X_teste)[:, 1]
+    prob_sem = sem_sens.predict_proba(d.X_teste)[:, 1]
+    sensiveis_resultado = {
+        "com": {
+            "teste": metricas(d.y_teste, prob_com, limiar_com),
+            "vies": analise_vies(vies_teste, d.y_teste, prob_com, limiar_com),
+        },
+        "sem": {
+            "teste": metricas(d.y_teste, prob_sem, limiar_sem_sens),
+            "vies": analise_vies(vies_teste, d.y_teste, prob_sem, limiar_sem_sens),
+        },
+    }
+    print(
+        f"  Cor/raça e sexo: AUC com {sensiveis_resultado['com']['teste']['auc']:.3f} · "
+        f"sem {sensiveis_resultado['sem']['teste']['auc']:.3f} · {time.time() - inicio:.0f}s"
+    )
+    return {
+        "modelo": nome,
+        "parametros": {k.replace("modelo__", ""): (list(v) if isinstance(v, tuple) else v) for k, v in params.items()},
+        "regiao": regiao_resultado,
+        "cor_sexo": sensiveis_resultado,
+    }
+
+
+def curva_roc(y: np.ndarray, prob: np.ndarray, pontos: int = 51) -> dict:
+    """Curva ROC resumida (para os gráficos), em pontos fixos de taxa de falso positivo."""
+    fpr, tpr, _ = roc_curve(y, prob)
+    grade = np.linspace(0, 1, pontos)
+    return {"fpr": grade.round(3).tolist(), "tpr": np.interp(grade, fpr, tpr).round(4).tolist()}
+
+
 def treinar_modelo(nome: str, d: Divisao, amostra_grid: int) -> ModeloTreinado:
     """GridSearchCV numa parte do ajuste, treino final no ajuste todo, limiar na validação, métricas no teste."""
     modelo, grade = MODELOS[nome]
@@ -235,7 +321,12 @@ def treinar_modelo(nome: str, d: Divisao, amostra_grid: int) -> ModeloTreinado:
 
 
 def montar_metadados(
-    escolhido: str, d: Divisao, total: int, treinados: dict[str, ModeloTreinado], vies: dict, extra: dict | None
+    escolhido: str,
+    d: Divisao,
+    total: int,
+    treinados: dict[str, ModeloTreinado],
+    vies: dict,
+    testes: dict | None,
 ) -> dict:
     agora = datetime.now(UTC)
     melhor = treinados[escolhido]
@@ -257,11 +348,13 @@ def montar_metadados(
             "taxa_risco_treino": round(float(d.y_ajuste.mean()), 4),
         },
         "entradas": list(d.X_ajuste.columns),
+        "usa_cor_raca_e_sexo": True,
         "limiar_decisao": round(melhor.limiar, 4),
         "referencia": perfil_referencia(d.X_ajuste),
         "resultados": {nome: t.resultado for nome, t in treinados.items()},
         "analise_vies": vies,
-        "teste_regiao": extra,
+        "testes_iniciais": testes,
+        "curvas_roc": {nome: curva_roc(d.y_teste, t.prob_teste) for nome, t in treinados.items()},
     }
 
 
@@ -290,7 +383,15 @@ def ler_argumentos() -> argparse.Namespace:
     parser.add_argument(
         "--teste-regiao",
         choices=sorted(set(c.REGIAO_POR_UF.values())),
-        help="Teste extra: treina sem esta região e avalia nela.",
+        default="Nordeste",
+        help="Região dos testes iniciais: compara o treino com e sem ela, avaliando nos alunos dela.",
+    )
+    parser.add_argument(
+        "--modelo-testes", choices=list(MODELOS), default="mlp", help="Modelo usado nos testes iniciais."
+    )
+    parser.add_argument("--sem-testes", action="store_true", help="Pula os testes iniciais.")
+    parser.add_argument(
+        "--graficos", type=Path, default=Path("docs/resultados"), help="Pasta dos gráficos (precisa do matplotlib)."
     )
     return parser.parse_args()
 
@@ -302,6 +403,8 @@ def main() -> None:
 
     divisao = dividir(X, media)
     print(f"Corte do quartil inferior (treino): média < {divisao.corte:.1f}")
+
+    testes = None if args.sem_testes else testes_iniciais(divisao, vies, args.modelo_testes, args.teste_regiao)
 
     treinados: dict[str, ModeloTreinado] = {}
     for nome in args.modelos:
@@ -322,14 +425,17 @@ def main() -> None:
         vies_teste = vies.loc[divisao.idx_teste].reset_index(drop=True)
         vies_resultado = analise_vies(vies_teste, divisao.y_teste, melhor.prob_teste, melhor.limiar)
 
-    extra = None
-    if args.teste_regiao:
-        extra = teste_por_regiao(X, media, args.teste_regiao, MODELOS[escolhido][0], melhor.parametros)
-        print(f"Teste sem a região {args.teste_regiao}: AUC {extra['auc']:.3f}")
-
-    metadados = montar_metadados(escolhido, divisao, len(X), treinados, vies_resultado, extra)
+    metadados = montar_metadados(escolhido, divisao, len(X), treinados, vies_resultado, testes)
     salvar_resultados(args.saida, melhor.pipeline, metadados)
     print(f"Salvo em {args.saida}/pipeline.pkl, metadados.json e relatorio_treino.md")
+
+    try:
+        from .graficos import gerar_graficos
+    except ImportError:
+        print("matplotlib não instalado: gráficos não gerados (pip install -r requirements-dev.txt).")
+    else:
+        arquivos = gerar_graficos(metadados, args.graficos)
+        print(f"{len(arquivos)} gráficos salvos em {args.graficos}/")
 
 
 def _milhar(numero: int) -> str:
@@ -338,6 +444,64 @@ def _milhar(numero: int) -> str:
 
 def _linha_tabela(*celulas) -> str:
     return "| " + " | ".join(str(c) for c in celulas) + " |"
+
+
+def _pct(valor: float | None) -> str:
+    return "-" if valor is None else f"{valor:.1%}"
+
+
+def _relatorio_testes(t: dict | None) -> list[str]:
+    if not t:
+        return []
+    r = t["regiao"]
+    linhas = [
+        f"## Testes iniciais ({t['modelo']}, mesmo conjunto de teste)",
+        "",
+        f"### Treino com e sem o {r['regiao']}",
+        "",
+        f"Avaliação nos {_milhar(r['n_teste_regiao'])} alunos do {r['regiao']} no conjunto de teste.",
+        "",
+        _linha_tabela(
+            "Treino", "Alunos no treino", "AUC", "F1", "Recall", "Falso positivo", "Risco real", "Risco previsto"
+        ),
+        _linha_tabela(*["---"] * 8),
+    ]
+    for chave, rotulo, n in [
+        ("com_regiao", f"Com o {r['regiao']}", r["n_treino_com"]),
+        ("sem_regiao", f"Sem o {r['regiao']}", r["n_treino_sem"]),
+    ]:
+        v = r[chave]["na_regiao"]
+        linhas.append(
+            _linha_tabela(
+                rotulo,
+                _milhar(n),
+                v["auc"],
+                v["f1"],
+                _pct(v["recall"]),
+                _pct(v["falso_positivo"]),
+                _pct(v["taxa_real_risco"]),
+                _pct(v["risco_medio_previsto"]),
+            )
+        )
+    cs = t["cor_sexo"]
+    linhas += [
+        "",
+        "### Com e sem cor/raça e sexo",
+        "",
+        _linha_tabela("Modelo", "AUC", "F1", "Recall", "Falso positivo"),
+        _linha_tabela(*["---"] * 5),
+    ]
+    for chave, rotulo in [("com", "Com cor/raça e sexo"), ("sem", "Sem cor/raça e sexo")]:
+        v = cs[chave]["teste"]
+        linhas.append(_linha_tabela(rotulo, v["auc"], v["f1"], _pct(v["recall"]), _pct(v["falso_positivo"])))
+    linhas += ["", "Falso positivo por cor/raça (com → sem):", ""]
+    com, sem = cs["com"]["vies"].get("cor_raca", {}), cs["sem"]["vies"].get("cor_raca", {})
+    for g in com:
+        if g in sem:
+            linhas.append(
+                f"- {c.COR_RACA.get(g, g)}: {_pct(com[g]['falso_positivo'])} → {_pct(sem[g]['falso_positivo'])}"
+            )
+    return [*linhas, ""]
 
 
 def relatorio(m: dict) -> str:
@@ -350,7 +514,9 @@ def relatorio(m: dict) -> str:
         f"- Divisão: ajuste {_milhar(a['ajuste'])} · validação {_milhar(a['validacao'])} · teste {_milhar(a['teste'])}",
         f"- Alvo: {m['alvo']['descricao']} (média < {m['alvo']['corte_media']})",
         f"- Modelo escolhido: **{m['modelo']}**",
+        "- Entradas: questionário socioeconômico, escola, faixa etária, cor/raça e sexo (sem nenhuma nota)",
         "",
+        *_relatorio_testes(m.get("testes_iniciais")),
         "## Comparação dos modelos (conjunto de teste)",
         "",
         _linha_tabela("Modelo", "AUC CV", "AUC teste", "F1", "Precisão", "Recall", "Limiar"),
@@ -361,9 +527,6 @@ def relatorio(m: dict) -> str:
         linhas.append(
             _linha_tabela(nome, r["auc_validacao_cruzada"], t["auc"], t["f1"], t["precisao"], t["recall"], r["limiar"])
         )
-    if m.get("teste_regiao"):
-        e = m["teste_regiao"]
-        linhas += ["", f"Teste sem a região **{e['regiao_teste']}** ({_milhar(e['n_teste'])} alunos): AUC {e['auc']}"]
     if m.get("analise_vies"):
         linhas += ["", "## Análise de viés (modelo escolhido, teste)", ""]
         for coluna, grupos in m["analise_vies"].items():
@@ -389,7 +552,7 @@ def relatorio(m: dict) -> str:
         linhas += [
             "Recall: dos alunos realmente no quartil inferior, quantos o modelo apontou.",
             "Falso positivo: dos alunos fora do quartil inferior, quantos o modelo apontou por engano.",
-            "Cor/raça e sexo NÃO são entradas do modelo; diferenças aqui vêm de variáveis associadas a elas.",
+            "Cor/raça e sexo são entradas do modelo: veja nos testes iniciais o efeito de tirá-las.",
         ]
     return "\n".join(linhas) + "\n"
 

@@ -15,6 +15,8 @@ const VALORES = {
   localizacao_escola: '1',
   uf_escola: 'SP',
   faixa_etaria: '2',
+  sexo: 'F',
+  cor_raca: '0',
 }
 
 describe('montarPerfil', () => {
@@ -24,6 +26,14 @@ describe('montarPerfil', () => {
     expect(perfil.rede_escola).toBe(2)
     expect(perfil.faixa_etaria).toBe(2)
     expect(perfil.renda_familiar).toBe('C')
+    expect(perfil.cor_raca).toBe(0)
+    expect(perfil.sexo).toBe('F')
+  })
+
+  it('não envia cor/raça quando não foi preenchida', () => {
+    const semCor: Partial<typeof VALORES> = { ...VALORES }
+    delete semCor.cor_raca
+    expect(montarPerfil(semCor)).not.toHaveProperty('cor_raca')
   })
 
   it('deduz o tipo de escola pela rede', () => {

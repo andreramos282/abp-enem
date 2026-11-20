@@ -19,6 +19,8 @@ export interface Perfil {
   localizacao_escola: number
   uf_escola: string
   faixa_etaria: number
+  cor_raca?: number
+  sexo?: string
 }
 
 export interface Fator {
