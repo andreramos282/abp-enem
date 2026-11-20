@@ -163,6 +163,25 @@ export interface ItemHistorico {
   previsao: Previsao
 }
 
+export interface ResumoModelo {
+  modelo: string
+  simulado: boolean
+  treinado_em: string | null
+  ano_dados: number | null
+  alunos_amostra: number | null
+  corte_media: number | null
+  auc_teste: number | null
+  recall_teste: number | null
+  auc_outro_ano: number | null
+  outro_ano: number | null
+  calibracao_erro_medio: number | null
+  importancia: Record<string, number>
+}
+
+export function buscarResumoModelo() {
+  return requisitar<ResumoModelo>('/api/modelo')
+}
+
 export function buscarHistorico(limite = 100) {
   return requisitar<ItemHistorico[]>(`/api/historico?limite=${limite}`)
 }

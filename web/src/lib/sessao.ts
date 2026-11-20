@@ -1,3 +1,5 @@
+import { useSyncExternalStore } from 'react'
+
 // Sessão do usuário logado: token JWT e dados básicos, guardados no navegador.
 // localStorage pode falhar (aba anônima, bloqueio), então há uma cópia em memória.
 
@@ -15,6 +17,19 @@ export interface Sessao {
 
 const CHAVE = 'abp-enem:sessao'
 let emMemoria: Sessao | null | undefined
+const ouvintes = new Set<() => void>()
+
+function avisar() {
+  ouvintes.forEach((ouvinte) => ouvinte())
+}
+
+// Hook: a tela desenha de novo quando alguém entra ou sai.
+export function useSessao(): Sessao | null {
+  return useSyncExternalStore((ouvinte) => {
+    ouvintes.add(ouvinte)
+    return () => ouvintes.delete(ouvinte)
+  }, lerSessao)
+}
 
 export function lerSessao(): Sessao | null {
   if (emMemoria !== undefined) return emMemoria
@@ -35,6 +50,7 @@ export function salvarSessao(sessao: Sessao) {
   } catch {
     /* sem armazenamento: segue só em memória */
   }
+  avisar()
 }
 
 export function encerrarSessao() {
@@ -45,6 +61,7 @@ export function encerrarSessao() {
   } catch {
     /* nada a limpar */
   }
+  avisar()
 }
 
 export function iniciais(nome: string) {

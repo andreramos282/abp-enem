@@ -75,6 +75,8 @@ def test_api_com_modelo_real(modelo_treinado, monkeypatch):
 
     with TestClient(app) as cliente:
         assert cliente.get("/api/health").json()["modelo"] != "mock"
+        resumo = cliente.get("/api/modelo").json()
+        assert resumo["simulado"] is False and resumo["auc_teste"] > 0.7 and resumo["importancia"]
 
         vulneravel = {**PERFIL, "renda_familiar": "B", "computador": "A", "internet": "A", "escolaridade_mae": "B"}
         favorecido = {

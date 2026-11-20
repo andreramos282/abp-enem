@@ -178,9 +178,16 @@ ruff check . && ruff format --check .
 # Front-end (dentro de web/)
 npm test
 npm run lint && npm run format:check
+
+# Ponta a ponta: abre o site num navegador de verdade (login, análise, histórico, lote, celular)
+cd web && npm run build && cd ..
+python -m playwright install chromium   # só na primeira vez
+pytest -m e2e
 ```
 
 Tudo isso roda automaticamente a cada pull request (GitHub Actions).
+
+**Site acordado:** o workflow `.github/workflows/manter-acordado.yml` acessa o site a cada 10 minutos para o Render não "dormir". Para ligar, crie a variável `URL_SITE` (ex.: `https://abp-enem.onrender.com`) em Settings → Secrets and variables → Actions → Variables.
 
 ## Como contribuir
 
@@ -206,3 +213,5 @@ Veja o [CONTRIBUTING.md](CONTRIBUTING.md): preparação do ambiente, padrão de 
 - [x] Análise em lote (planilha CSV) e fatores separados em "ação" e "contexto"
 - [x] Banco de dados (SQLite local / Postgres), login com JWT e histórico de análises
 - [x] Teste no ENEM 2022 (AUC 0,773)
+- [x] Página "Sobre o modelo", aviso de LGPD no formulário (sexo e cor/raça opcionais)
+- [x] Testes de ponta a ponta com Playwright e workflow para manter o site acordado
