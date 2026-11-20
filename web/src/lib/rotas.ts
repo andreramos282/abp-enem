@@ -1,9 +1,9 @@
 import { useEffect, useState } from 'react'
 
 // Roteamento simples por hash (#/rota): funciona em qualquer servidor estático.
-export type Rota = 'login' | 'visao-geral' | 'nova-analise' | 'resultado'
+export type Rota = 'login' | 'visao-geral' | 'nova-analise' | 'resultado' | 'lote'
 
-const ROTAS: Rota[] = ['login', 'visao-geral', 'nova-analise', 'resultado']
+const ROTAS: Rota[] = ['login', 'visao-geral', 'nova-analise', 'resultado', 'lote']
 
 function lerRota(): Rota {
   const atual = window.location.hash.replace(/^#\/?/, '') as Rota

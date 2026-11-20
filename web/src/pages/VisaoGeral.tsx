@@ -1,10 +1,11 @@
 import { useEffect, useRef, useState, type KeyboardEvent } from 'react'
-import { AlertTriangle, BarChart3, ClipboardPlus, School, Search, Users, X } from 'lucide-react'
+import { AlertTriangle, BarChart3, ClipboardPlus, Scale, School, Search, Users, X } from 'lucide-react'
 import {
   analisarMunicipio,
   formatarNumero,
   nivelDaEscola,
   type AnaliseMunicipio,
+  type Comparacao,
   type EscolaResumo,
   type NivelRisco,
 } from '../lib/api'
@@ -100,6 +101,8 @@ export function VisaoGeral() {
   const escolasAltoRisco = analise?.escolas.filter((e) => e.status_alerta === 'ALTO_RISCO').length ?? 0
   // Algumas bases (ex.: ENEM 2023) não identificam a escola: aí não há análise por escola.
   const temEscolas = Boolean(analise && analise.escolas.length > 0)
+  const comparacao = analise?.comparacao
+  const diferencaUf = stats && comparacao ? stats.percentual_risco_municipio - comparacao.percentual_risco_uf : null
 
   return (
     <>
@@ -206,13 +209,31 @@ export function VisaoGeral() {
           detalhe={stats ? t.visao.kpiMediaDetalhe : undefined}
           icone={<BarChart3 className="size-4" aria-hidden />}
         />
-        <Kpi
-          titulo={t.visao.kpiEscolas}
-          valor={stats && temEscolas ? t.visao.deTotal(escolasAltoRisco, stats.total_escolas_unicas) : '—'}
-          detalhe={stats && !temEscolas ? t.visao.semEscolas : undefined}
-          tom={escolasAltoRisco > 0 ? 'alto' : 'neutro'}
-          icone={<School className="size-4" aria-hidden />}
-        />
+        {temEscolas || !comparacao ? (
+          <Kpi
+            titulo={t.visao.kpiEscolas}
+            valor={stats && temEscolas ? t.visao.deTotal(escolasAltoRisco, stats.total_escolas_unicas) : '—'}
+            detalhe={stats && !temEscolas ? t.visao.semEscolas : undefined}
+            tom={escolasAltoRisco > 0 ? 'alto' : 'neutro'}
+            icone={<School className="size-4" aria-hidden />}
+          />
+        ) : (
+          <Kpi
+            titulo={t.visao.kpiComparacao}
+            valor={
+              diferencaUf === null
+                ? '—'
+                : `${diferencaUf >= 0 ? '+' : '−'}${formatarNumero(Math.abs(diferencaUf), 1)} ${t.resultado.pp}`
+            }
+            detalhe={t.visao.kpiComparacaoDetalhe(
+              analise?.uf ?? '',
+              formatarNumero(comparacao.percentual_risco_uf, 1),
+              formatarNumero(comparacao.percentual_risco_brasil, 1),
+            )}
+            tom={diferencaUf !== null && diferencaUf > 0 ? 'alto' : 'baixo'}
+            icone={<Scale className="size-4" aria-hidden />}
+          />
+        )}
       </div>
 
       {/* Mapa + distribuição */}
@@ -221,13 +242,20 @@ export function VisaoGeral() {
           <MapaMunicipio malha={malha} nome={selecionado ? `${selecionado.nome} – ${selecionado.uf}` : undefined} />
         </Cartao>
         <Cartao className="p-5 sm:p-6 lg:col-span-2">
-          <TituloCartao titulo={t.visao.distribuicaoTitulo} subtitulo={t.visao.distribuicaoSub} />
-          {!analise ? (
-            <SemMunicipio carregando={carregando} />
-          ) : temEscolas ? (
-            <DistribuicaoRisco escolas={analise.escolas} />
+          {temEscolas ? (
+            <>
+              <TituloCartao titulo={t.visao.distribuicaoTitulo} subtitulo={t.visao.distribuicaoSub} />
+              {analise && <DistribuicaoRisco escolas={analise.escolas} />}
+            </>
           ) : (
-            <p className="mt-6 text-sm leading-relaxed text-suave">{t.visao.semEscolasTexto}</p>
+            <>
+              <TituloCartao titulo={t.visao.redeTitulo} subtitulo={t.visao.redeSub} />
+              {!analise ? (
+                <SemMunicipio carregando={carregando} texto={t.visao.vazioRede} />
+              ) : (
+                <RiscoPorRede analise={analise} />
+              )}
+            </>
           )}
         </Cartao>
       </div>
@@ -268,13 +296,61 @@ export function VisaoGeral() {
   )
 }
 
-function SemMunicipio({ carregando }: { carregando: boolean }) {
+function SemMunicipio({ carregando, texto }: { carregando: boolean; texto?: string }) {
   const { t } = usePreferencias()
   if (carregando) return <Carregando texto={t.visao.analisando} />
   return (
     <div className="flex h-full min-h-40 flex-col items-center justify-center gap-2 text-center">
       <Search className="size-6 text-fraco" aria-hidden />
-      <p className="max-w-56 text-sm text-suave">{t.visao.vazio}</p>
+      <p className="max-w-56 text-sm text-suave">{texto ?? t.visao.vazio}</p>
+    </div>
+  )
+}
+
+function RiscoPorRede({ analise }: { analise: AnaliseMunicipio }) {
+  const { t } = usePreferencias()
+  return (
+    <div className="mt-5 flex flex-col gap-6">
+      {analise.por_rede && analise.por_rede.length > 0 && (
+        <ul className="flex flex-col gap-4">
+          {analise.por_rede.map((r) => (
+            <li key={r.rede_escola}>
+              <div className="mb-1.5 flex items-baseline justify-between gap-2 text-sm">
+                <span className="font-medium text-texto-2">{r.rotulo}</span>
+                <span className="text-xs text-suave">{t.visao.alunos(formatarNumero(r.total_alunos))}</span>
+              </div>
+              <BarraPercentual valor={r.percentual_risco} />
+            </li>
+          ))}
+        </ul>
+      )}
+      {analise.comparacao && <ComparacaoRegional analise={analise} comparacao={analise.comparacao} />}
+      <p className="text-xs leading-relaxed text-suave">{t.visao.notaRede}</p>
+    </div>
+  )
+}
+
+function ComparacaoRegional({ analise, comparacao }: { analise: AnaliseMunicipio; comparacao: Comparacao }) {
+  const { t } = usePreferencias()
+  const linhas = [
+    {
+      rotulo: `${t.visao.rotuloMunicipio} (${analise.municipio})`,
+      valor: analise.estatisticas_gerais.percentual_risco_municipio,
+    },
+    { rotulo: t.visao.rotuloEstado(analise.uf), valor: comparacao.percentual_risco_uf },
+    { rotulo: t.visao.rotuloBrasil, valor: comparacao.percentual_risco_brasil },
+  ]
+  return (
+    <div className="border-t border-borda pt-5">
+      <p className="mb-3 text-sm font-semibold">{t.visao.comparacaoTitulo}</p>
+      <ul className="flex flex-col gap-3">
+        {linhas.map((l) => (
+          <li key={l.rotulo}>
+            <p className="mb-1 text-xs text-suave">{l.rotulo}</p>
+            <BarraPercentual valor={l.valor} />
+          </li>
+        ))}
+      </ul>
     </div>
   )
 }

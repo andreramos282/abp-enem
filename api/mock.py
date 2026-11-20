@@ -11,7 +11,16 @@ import hashlib
 import math
 
 from .regras import classificar, renda_per_capita, status_escola
-from .schemas import AnaliseMunicipio, EscolaResumo, EstatisticasMunicipio, Fator, PerfilAluno, Previsao
+from .schemas import (
+    AnaliseMunicipio,
+    Comparacao,
+    EscolaResumo,
+    EstatisticasMunicipio,
+    Fator,
+    PerfilAluno,
+    Previsao,
+    RiscoPorRede,
+)
 from .traducoes import FATORES, OPCOES, Idioma, formatar_reais
 
 
@@ -90,7 +99,10 @@ class PreditorMock:
             modelo=self.nome,
         )
 
-    def analisar_municipio(self, municipio: str, uf: str) -> AnaliseMunicipio:
+    def prever_lote(self, perfis: list[PerfilAluno]) -> list[Previsao]:
+        return [self.prever(perfil) for perfil in perfis]
+
+    def analisar_municipio(self, municipio: str, uf: str, idioma: Idioma = "pt") -> AnaliseMunicipio:
         semente = int(hashlib.sha256(f"{municipio.casefold()}|{uf}".encode()).hexdigest(), 16)
 
         def numero(indice: int, minimo: float, maximo: float) -> float:
@@ -126,5 +138,21 @@ class PreditorMock:
                 percentual_risco_municipio=round(risco, 2),
             ),
             escolas=escolas,
+            comparacao=Comparacao(
+                percentual_risco_uf=round(numero(20, 15, 35), 2),
+                percentual_risco_brasil=25.0,
+                media_uf=round(numero(21, 500, 560), 2),
+                media_brasil=531.0,
+            ),
+            por_rede=[
+                RiscoPorRede(
+                    rede_escola=codigo,
+                    rotulo=OPCOES[idioma]["rede_escola"][codigo],
+                    total_alunos=int(total_alunos * fracao),
+                    percentual_risco=round(numero(22 + codigo, minimo, maximo), 2),
+                    media=round(numero(26 + codigo, 470, 620), 2),
+                )
+                for codigo, fracao, minimo, maximo in [(2, 0.7, 25, 45), (4, 0.2, 3, 12), (1, 0.1, 5, 15)]
+            ],
             modelo=self.nome,
         )

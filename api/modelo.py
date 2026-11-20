@@ -27,11 +27,23 @@ from ml.features import GRUPOS_FATORES, renomear_microdados
 from ml.preparar_dados import carregar
 
 from .regras import classificar, renda_per_capita, status_escola
-from .schemas import AnaliseMunicipio, EscolaResumo, EstatisticasMunicipio, Fator, PerfilAluno, Previsao
-from .traducoes import FATORES, OPCOES, REGIOES, Idioma, formatar_reais
+from .schemas import (
+    AnaliseMunicipio,
+    Comparacao,
+    EscolaResumo,
+    EstatisticasMunicipio,
+    Fator,
+    PerfilAluno,
+    Previsao,
+    RiscoPorRede,
+)
+from .traducoes import FATORES, OPCOES, REDE_NAO_INFORMADA, REGIOES, Idioma, formatar_reais
 
 IMPACTO_MINIMO = 0.5  # pontos percentuais
-MAX_FATORES = 6
+MAX_FATORES = 6  # fatores em que a escola ou a família podem atuar
+MAX_CONTEXTO = 3  # fatores de contexto (o aluno não muda): mostrados à parte
+GRUPOS_CONTEXTO = {"cor_raca", "sexo", "regiao"}
+BLOCO_PREVISAO = 20_000  # linhas por vez ao prever a amostra inteira (limita o pico de memória)
 
 
 class PreditorModelo:
@@ -46,6 +58,8 @@ class PreditorModelo:
         self.limiares_cor: dict[str, float] = equidade.get("limiares_cor_raca", {})
         self.caminho_amostra = caminho_amostra
         self._amostra: pd.DataFrame | None = None
+        self._por_uf: pd.DataFrame | None = None
+        self._brasil: tuple[float, float] | None = None
 
     # ------------------------------------------------------------------ previsão
     def _linha(self, perfil: PerfilAluno) -> dict:
@@ -77,19 +91,37 @@ class PreditorModelo:
                 variavel=grupo,
                 descricao=_descrever(grupo, perfil, idioma),
                 impacto=round((probabilidade - p_ref) * 100, 1),
+                tipo="contexto" if grupo in GRUPOS_CONTEXTO else "acao",
             )
             for grupo, p_ref in zip(grupos, probabilidades[1:], strict=True)
             if abs(probabilidade - p_ref) * 100 >= IMPACTO_MINIMO
         ]
         fatores.sort(key=lambda f: abs(f.impacto), reverse=True)
+        acao = [f for f in fatores if f.tipo == "acao"][:MAX_FATORES]
+        contexto = [f for f in fatores if f.tipo == "contexto"][:MAX_CONTEXTO]
 
         return Previsao(
             probabilidade_risco=round(probabilidade, 4),
             nivel_risco=classificar(probabilidade),
-            fatores=fatores[:MAX_FATORES],
+            fatores=acao + contexto,
             acompanhamento_recomendado=self._acompanhamento(probabilidade, perfil),
             modelo=self.nome,
         )
+
+    def prever_lote(self, perfis: list[PerfilAluno]) -> list[Previsao]:
+        """Só a probabilidade de cada aluno (sem fatores): uma única chamada ao modelo."""
+        tabela = pd.DataFrame([self._linha(p) for p in perfis], columns=self.entradas)
+        probabilidades = self.pipeline.predict_proba(tabela)[:, 1]
+        return [
+            Previsao(
+                probabilidade_risco=round(float(p), 4),
+                nivel_risco=classificar(float(p)),
+                fatores=[],
+                acompanhamento_recomendado=self._acompanhamento(float(p), perfil),
+                modelo=self.nome,
+            )
+            for p, perfil in zip(probabilidades, perfis, strict=True)
+        ]
 
     def _acompanhamento(self, probabilidade: float, perfil: PerfilAluno) -> bool | None:
         """Compara com o limiar do grupo de cor/raça (equidade) ou, sem ele, com o limiar geral."""
@@ -117,19 +149,25 @@ class PreditorModelo:
             df["_municipio"] = df["municipio_escola"].astype("string").str.strip().str.casefold().astype("category")
             df["_uf"] = df["uf_escola"].astype("string").str.strip().str.upper().astype("category")
             df = df.drop(columns="municipio_escola")
+            # Risco previsto de todos os alunos, calculado uma vez, em blocos para não estourar a memória.
+            riscos = [
+                self.pipeline.predict_proba(df.iloc[i : i + BLOCO_PREVISAO].reindex(columns=self.entradas))[:, 1]
+                for i in range(0, len(df), BLOCO_PREVISAO)
+            ]
+            df["_risco"] = np.concatenate(riscos).astype("float32") if riscos else np.array([], dtype="float32")
+            df["_media"] = df["media_notas"].astype("float32")
+            df = df.drop(columns="media_notas")
+            self._por_uf = df.groupby("_uf", observed=True)[["_risco", "_media"]].mean()
+            self._brasil = (float(df["_risco"].mean()), float(df["_media"].mean()))
             self._amostra = df
         return self._amostra
 
-    def analisar_municipio(self, municipio: str, uf: str) -> AnaliseMunicipio:
+    def analisar_municipio(self, municipio: str, uf: str, idioma: Idioma = "pt") -> AnaliseMunicipio:
         amostra = self._carregar_amostra()
         dados = amostra[(amostra["_municipio"] == municipio.strip().casefold()) & (amostra["_uf"] == uf)].copy()
         if dados.empty:
             raise LookupError("Nenhum aluno da amostra para este município.")
-
-        prob = self.pipeline.predict_proba(dados.reindex(columns=self.entradas))[:, 1]
         # Risco previsto = probabilidade média (parcela esperada de alunos no quartil inferior).
-        dados["_risco"] = prob
-        dados["_media"] = dados["media_notas"].astype(float)
 
         escolas: list[EscolaResumo] = []
         if "co_escola" in dados.columns:
@@ -152,6 +190,30 @@ class PreditorModelo:
                 )
             escolas.sort(key=lambda e: (e.percentual_risco_escola, e.total_alunos_escola), reverse=True)
 
+        comparacao = None
+        if self._por_uf is not None and self._brasil is not None and uf in self._por_uf.index:
+            estado = self._por_uf.loc[uf]
+            comparacao = Comparacao(
+                percentual_risco_uf=round(float(estado["_risco"]) * 100, 2),
+                percentual_risco_brasil=round(self._brasil[0] * 100, 2),
+                media_uf=round(float(estado["_media"]), 2),
+                media_brasil=round(self._brasil[1], 2),
+            )
+
+        rotulos_rede = OPCOES[idioma]["rede_escola"]
+        rede = pd.to_numeric(dados["rede_escola"], errors="coerce").fillna(0).astype(int)
+        por_rede = [
+            RiscoPorRede(
+                rede_escola=int(codigo),
+                rotulo=rotulos_rede.get(int(codigo), REDE_NAO_INFORMADA[idioma]),
+                total_alunos=int(len(grupo)),
+                percentual_risco=round(float(grupo["_risco"].mean()) * 100, 2),
+                media=round(float(grupo["_media"].mean()), 2),
+            )
+            for codigo, grupo in dados.groupby(rede)
+        ]
+        por_rede.sort(key=lambda r: r.total_alunos, reverse=True)
+
         return AnaliseMunicipio(
             municipio=municipio,
             uf=uf,
@@ -162,6 +224,8 @@ class PreditorModelo:
                 percentual_risco_municipio=round(float(dados["_risco"].mean()) * 100, 2),
             ),
             escolas=escolas,
+            comparacao=comparacao,
+            por_rede=por_rede,
             modelo=self.nome,
         )
 

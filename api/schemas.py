@@ -73,6 +73,13 @@ class Fator(BaseModel):
     variavel: str
     descricao: str
     impacto: float = Field(description="Pontos percentuais. Positivo aumenta o risco, negativo reduz.")
+    tipo: Literal["acao", "contexto"] = Field(
+        default="acao",
+        description=(
+            "acao: a escola ou a família podem atuar (internet, computador, reforço...). "
+            "contexto: característica que o aluno não muda (cor/raça, sexo, região); não deve rotular o aluno."
+        ),
+    )
 
 
 class Previsao(BaseModel):
@@ -87,6 +94,33 @@ class Previsao(BaseModel):
         ),
     )
     modelo: str = Field(description="Nome/versão do modelo que gerou a previsão ('mock' enquanto não houver modelo).")
+
+
+# ---------------------------------------------------------------------------
+# POST /api/prever/lote
+# ---------------------------------------------------------------------------
+MAX_LOTE = 1000
+
+
+class LoteRequisicao(BaseModel):
+    """Vários alunos de uma vez. Cada item é um perfil (mesmos campos de /api/prever) e pode ter um
+    "identificador" livre (ex.: número de chamada). Itens inválidos voltam com erro, sem derrubar o lote."""
+
+    alunos: list[dict] = Field(min_length=1, max_length=MAX_LOTE)
+
+
+class ResultadoLote(BaseModel):
+    linha: int = Field(description="Posição do aluno na lista enviada, começando em 1.")
+    identificador: str | None = None
+    probabilidade_risco: float | None = None
+    nivel_risco: NivelRisco | None = None
+    acompanhamento_recomendado: bool | None = None
+    erro: str | None = None
+
+
+class RespostaLote(BaseModel):
+    resultados: list[ResultadoLote]
+    modelo: str
 
 
 # ---------------------------------------------------------------------------
@@ -120,11 +154,30 @@ class EscolaResumo(BaseModel):
     status_alerta: Literal["ALTO_RISCO", "MEDIO_RISCO", "BAIXO_RISCO"]
 
 
+class Comparacao(BaseModel):
+    """Risco previsto (%) e média das notas do estado e do Brasil, na mesma amostra."""
+
+    percentual_risco_uf: float
+    percentual_risco_brasil: float
+    media_uf: float
+    media_brasil: float
+
+
+class RiscoPorRede(BaseModel):
+    rede_escola: int = Field(description="1 federal, 2 estadual, 3 municipal, 4 privada, 0 não informada")
+    rotulo: str
+    total_alunos: int
+    percentual_risco: float
+    media: float
+
+
 class AnaliseMunicipio(BaseModel):
     municipio: str
     uf: str
     estatisticas_gerais: EstatisticasMunicipio
     escolas: list[EscolaResumo]
+    comparacao: Comparacao | None = None
+    por_rede: list[RiscoPorRede] = Field(default_factory=list)
     modelo: str
 
 

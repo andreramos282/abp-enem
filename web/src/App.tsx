@@ -6,6 +6,7 @@ import { useRota } from './lib/rotas'
 import { Login } from './pages/Login'
 import { NovaAnalise } from './pages/NovaAnalise'
 import { Resultado } from './pages/Resultado'
+import { Lote } from './pages/Lote'
 import { VisaoGeral } from './pages/VisaoGeral'
 
 function Rotas() {
@@ -23,6 +24,7 @@ function Rotas() {
       {rota === 'visao-geral' && <VisaoGeral />}
       {rota === 'nova-analise' && <NovaAnalise />}
       {rota === 'resultado' && <Resultado />}
+      {rota === 'lote' && <Lote />}
     </Layout>
   )
 }

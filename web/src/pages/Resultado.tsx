@@ -109,6 +109,8 @@ export function Resultado() {
 
   const { previsao, rotulos } = analise
   const maiorImpacto = Math.max(...previsao.fatores.map((f) => Math.abs(f.impacto)), 1)
+  const acao = previsao.fatores.filter((f) => f.tipo !== 'contexto')
+  const contexto = previsao.fatores.filter((f) => f.tipo === 'contexto')
   const recomendacoes = recomendacoesPara(previsao.fatores)
   const resumo = [
     rotulos.rede_escola && t.resultado.rede(rotulos.rede_escola),
@@ -178,36 +180,7 @@ export function Resultado() {
 
         <Cartao className="p-5 sm:p-7">
           <TituloCartao titulo={t.resultado.fatoresTitulo} subtitulo={t.resultado.fatoresSub} />
-          <ul className="mt-6 flex flex-col gap-5">
-            {previsao.fatores.map((fator) => {
-              const aumenta = fator.impacto > 0
-              return (
-                <li
-                  key={fator.variavel}
-                  className="grid gap-2 sm:grid-cols-[minmax(0,1fr)_200px_80px] sm:items-center sm:gap-4"
-                >
-                  <span className="text-sm font-medium text-texto-2">{fator.descricao}</span>
-                  <div className="flex items-center gap-3 sm:contents">
-                    <div className="h-2.5 flex-1 overflow-hidden rounded-full bg-trilho">
-                      <div
-                        className={cx('h-full rounded-full', aumenta ? 'bg-risco-alto' : 'bg-risco-baixo')}
-                        style={{ width: `${(Math.abs(fator.impacto) / maiorImpacto) * 100}%` }}
-                      />
-                    </div>
-                    <span
-                      className={cx(
-                        'w-20 text-right text-sm font-semibold tabular-nums',
-                        aumenta ? 'text-risco-alto' : 'text-risco-baixo',
-                      )}
-                    >
-                      {aumenta ? '+' : '−'}
-                      {formatarNumero(Math.abs(fator.impacto), 1)} {t.resultado.pp}
-                    </span>
-                  </div>
-                </li>
-              )
-            })}
-          </ul>
+          <ListaFatores fatores={acao} maiorImpacto={maiorImpacto} />
           <div className="mt-6 flex flex-wrap gap-5 text-xs font-medium text-suave">
             <span className="flex items-center gap-1.5">
               <span className="size-2 rounded-full bg-risco-alto" aria-hidden /> {t.resultado.aumenta}
@@ -216,6 +189,13 @@ export function Resultado() {
               <span className="size-2 rounded-full bg-risco-baixo" aria-hidden /> {t.resultado.reduz}
             </span>
           </div>
+          {contexto.length > 0 && (
+            <div className="mt-7 border-t border-borda pt-6">
+              <h3 className="text-sm font-semibold">{t.resultado.contextoTitulo}</h3>
+              <p className="mt-1 text-xs leading-relaxed text-suave">{t.resultado.contextoAjuda}</p>
+              <ListaFatores fatores={contexto} maiorImpacto={maiorImpacto} discreto />
+            </div>
+          )}
         </Cartao>
       </div>
 
@@ -246,5 +226,50 @@ export function Resultado() {
         </Cartao>
       )}
     </>
+  )
+}
+
+function ListaFatores({
+  fatores,
+  maiorImpacto,
+  discreto = false,
+}: {
+  fatores: Fator[]
+  maiorImpacto: number
+  discreto?: boolean
+}) {
+  const { t } = usePreferencias()
+  return (
+    <ul className={cx('flex flex-col gap-5', discreto ? 'mt-4' : 'mt-6')}>
+      {fatores.map((fator) => {
+        const aumenta = fator.impacto > 0
+        const cor = discreto ? 'bg-fraco' : aumenta ? 'bg-risco-alto' : 'bg-risco-baixo'
+        return (
+          <li
+            key={fator.variavel}
+            className="grid gap-2 sm:grid-cols-[minmax(0,1fr)_200px_80px] sm:items-center sm:gap-4"
+          >
+            <span className="text-sm font-medium text-texto-2">{fator.descricao}</span>
+            <div className="flex items-center gap-3 sm:contents">
+              <div className="h-2.5 flex-1 overflow-hidden rounded-full bg-trilho">
+                <div
+                  className={cx('h-full rounded-full', cor)}
+                  style={{ width: `${(Math.abs(fator.impacto) / maiorImpacto) * 100}%` }}
+                />
+              </div>
+              <span
+                className={cx(
+                  'w-20 text-right text-sm font-semibold tabular-nums',
+                  discreto ? 'text-texto-2' : aumenta ? 'text-risco-alto' : 'text-risco-baixo',
+                )}
+              >
+                {aumenta ? '+' : '−'}
+                {formatarNumero(Math.abs(fator.impacto), 1)} {t.resultado.pp}
+              </span>
+            </div>
+          </li>
+        )
+      })}
+    </ul>
   )
 }

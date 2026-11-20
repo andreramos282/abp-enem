@@ -167,6 +167,8 @@ FATORES: dict[Idioma, dict[str, str]] = {
 }
 
 
+REDE_NAO_INFORMADA: dict[Idioma, str] = {"pt": "Não informada", "en": "Not informed"}
+
 REGIOES: dict[Idioma, dict[str, str]] = {
     "pt": {r: r for r in ["Norte", "Nordeste", "Centro-Oeste", "Sudeste", "Sul"]},
     "en": {

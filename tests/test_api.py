@@ -125,3 +125,27 @@ def test_prever_em_ingles_mantem_numeros():
 def test_idioma_invalido():
     with cliente() as c:
         assert c.get("/api/opcoes?idioma=es").status_code == 422
+
+
+def test_prever_lote_com_item_invalido():
+    alunos = [{**PERFIL, "identificador": "A1"}, {**PERFIL, "uf_escola": "XX"}, PERFIL]
+    with cliente() as c:
+        resposta = c.post("/api/prever/lote", json={"alunos": alunos})
+    assert resposta.status_code == 200
+    resultados = resposta.json()["resultados"]
+    assert [r["linha"] for r in resultados] == [1, 2, 3]
+    assert resultados[0]["identificador"] == "A1" and resultados[0]["probabilidade_risco"] is not None
+    assert resultados[1]["erro"] and resultados[1]["probabilidade_risco"] is None
+    assert resultados[2]["erro"] is None
+
+
+def test_prever_lote_rejeita_lista_vazia():
+    with cliente() as c:
+        assert c.post("/api/prever/lote", json={"alunos": []}).status_code == 422
+
+
+def test_municipio_traz_comparacao_e_rede():
+    with cliente() as c:
+        dados = c.post("/api/municipios/analytics?idioma=en", json={"municipio": "Jacareí", "uf": "SP"}).json()
+    assert dados["comparacao"]["percentual_risco_brasil"] > 0
+    assert dados["por_rede"] and dados["por_rede"][0]["rotulo"]

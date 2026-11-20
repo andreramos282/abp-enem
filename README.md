@@ -189,4 +189,6 @@ Veja o [CONTRIBUTING.md](CONTRIBUTING.md): preparação do ambiente, padrão de 
 - [ ] Publicar (ver `docs/deploy.md`)
 - [x] Integração do modelo real na API (com explicação dos fatores)
 - [x] Análise de viés e explicabilidade (limiar por cor/raça, calibração e SHAP)
+- [x] Painel do município: comparação com estado e Brasil e risco por rede de ensino
+- [x] Análise em lote (planilha CSV) e fatores separados em "ação" e "contexto"
 - [ ] Teste no ENEM 2022 (script pronto: `ml/teste_temporal.py`; falta rodar com os microdados de 2022)
