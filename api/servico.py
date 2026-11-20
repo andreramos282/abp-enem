@@ -29,7 +29,9 @@ def existe_modelo(pasta_modelo: Path) -> bool:
     return (pasta_modelo / "pipeline.pkl").is_file() and (pasta_modelo / "metadados.json").is_file()
 
 
-def criar_preditor(modo: str, pasta_modelo: Path, caminho_amostra: Path | None = None) -> Preditor:
+def criar_preditor(
+    modo: str, pasta_modelo: Path, caminho_amostra: Path | None = None, caminho_risco: Path | None = None
+) -> Preditor:
     """modo: "mock" (dados simulados), "modelo" (exige o modelo treinado) ou "auto" (modelo se existir)."""
     if modo == "mock" or (modo == "auto" and not existe_modelo(pasta_modelo)):
         from .mock import PreditorMock
@@ -39,4 +41,4 @@ def criar_preditor(modo: str, pasta_modelo: Path, caminho_amostra: Path | None =
         raise RuntimeError(f"Modelo não encontrado em {pasta_modelo}/. Rode: python -m ml.treinar")
     from .modelo import PreditorModelo
 
-    return PreditorModelo(pasta_modelo, caminho_amostra)
+    return PreditorModelo(pasta_modelo, caminho_amostra, caminho_risco)

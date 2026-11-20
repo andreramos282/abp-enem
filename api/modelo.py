@@ -26,8 +26,8 @@ import numpy as np
 import pandas as pd
 
 from ml import colunas_2023 as c
-from ml.features import GRUPOS_FATORES, renomear_microdados
-from ml.preparar_dados import carregar
+from ml import risco_municipios
+from ml.features import GRUPOS_FATORES
 
 from .regras import classificar, renda_per_capita, status_escola
 from .schemas import (
@@ -46,11 +46,10 @@ IMPACTO_MINIMO = 0.5  # pontos percentuais
 MAX_FATORES = 6  # fatores em que a escola ou a família podem atuar
 MAX_CONTEXTO = 3  # fatores de contexto (o aluno não muda): mostrados à parte
 GRUPOS_CONTEXTO = {"cor_raca", "sexo", "regiao"}
-BLOCO_PREVISAO = 10_000  # linhas por vez ao prever a amostra inteira (limita o pico de memória)
 
 
 class PreditorModelo:
-    def __init__(self, pasta_modelo: Path, caminho_amostra: Path | None = None):
+    def __init__(self, pasta_modelo: Path, caminho_amostra: Path | None = None, caminho_risco: Path | None = None):
         self.pipeline = joblib.load(pasta_modelo / "pipeline.pkl")
         self.metadados = json.loads((pasta_modelo / "metadados.json").read_text(encoding="utf-8"))
         self.nome = self.metadados.get("versao", "modelo")
@@ -60,6 +59,7 @@ class PreditorModelo:
         self.limiar_geral: float | None = self.metadados.get("limiar_decisao")
         self.limiares_cor: dict[str, float] = equidade.get("limiares_cor_raca", {})
         self.caminho_amostra = caminho_amostra
+        self.caminho_risco = caminho_risco
         self._amostra: pd.DataFrame | None = None
         self._por_uf: pd.DataFrame | None = None
         self._brasil: tuple[float, float] | None = None
@@ -135,31 +135,18 @@ class PreditorModelo:
 
     # ------------------------------------------------------------------ município
     def _carregar_amostra(self) -> pd.DataFrame:
-        """Carrega só as colunas necessárias e guarda textos como categorias.
+        """Risco previsto de cada aluno da amostra (com escola informada).
 
-        Lida inteira, a amostra ocupa ~600 MB de memória; assim fica em torno de 30 MB,
-        o que cabe em servidores pequenos (ex.: plano gratuito do Render, 512 MB).
+        Lê data/risco_municipios.parquet, calculado fora da API (python -m ml.risco_municipios).
+        Se o arquivo não existir ou for de outro modelo, calcula aqui: funciona, mas é lento e
+        usa muita memória (não cabe no plano gratuito do Render).
         """
         if self._amostra is None:
-            if not self.caminho_amostra or not self.caminho_amostra.is_file():
-                raise LookupError("Amostra do ENEM não encontrada. Gere com: python -m ml.preparar_dados")
-            inep = {**c.VARIAVEIS, **c.VARIAVEIS_CONTEXTO}
-            colunas = [inep.get(col, col) for col in [*self.entradas, "municipio_escola", "co_escola"]]
-            df = renomear_microdados(
-                carregar(self.caminho_amostra, colunas=[*colunas, "media_notas"], economizar_memoria=True)
-            )
-            df = df.dropna(subset=["municipio_escola"])
-            df["_municipio"] = df["municipio_escola"].astype("string").str.strip().str.casefold().astype("category")
-            df["_uf"] = df["uf_escola"].astype("string").str.strip().str.upper().astype("category")
-            df = df.drop(columns="municipio_escola")
-            # Risco previsto de todos os alunos, calculado uma vez, em blocos para não estourar a memória.
-            riscos = [
-                self.pipeline.predict_proba(df.iloc[i : i + BLOCO_PREVISAO].reindex(columns=self.entradas))[:, 1]
-                for i in range(0, len(df), BLOCO_PREVISAO)
-            ]
-            df["_risco"] = np.concatenate(riscos).astype("float32") if riscos else np.array([], dtype="float32")
-            df["_media"] = df["media_notas"].astype("float32")
-            df = df.drop(columns="media_notas")
+            df = risco_municipios.ler(self.caminho_risco, self.nome) if self.caminho_risco else None
+            if df is None:
+                if not self.caminho_amostra or not self.caminho_amostra.is_file():
+                    raise LookupError("Amostra do ENEM não encontrada. Gere com: python -m ml.preparar_dados")
+                df = risco_municipios.calcular(self.pipeline, self.entradas, self.caminho_amostra)
             self._por_uf = df.groupby("_uf", observed=True)[["_risco", "_media"]].mean()
             self._brasil = (float(df["_risco"].mean()), float(df["_media"].mean()))
             self._amostra = df

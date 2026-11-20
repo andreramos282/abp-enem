@@ -22,6 +22,7 @@ class Configuracao:
     modo_preditor: str
     pasta_modelo: Path
     caminho_amostra: Path
+    caminho_risco: Path
     url_banco: str
     segredo_jwt: str
     horas_token: int
@@ -47,6 +48,7 @@ def carregar_configuracao() -> Configuracao:
         modo_preditor=modo,
         pasta_modelo=_caminho("PASTA_MODELO", RAIZ / "models"),
         caminho_amostra=_caminho("CAMINHO_AMOSTRA", RAIZ / "data" / "amostra_enem_2023.parquet"),
+        caminho_risco=_caminho("CAMINHO_RISCO", RAIZ / "data" / "risco_municipios.parquet"),
         url_banco=url_banco(),
         segredo_jwt=_segredo_jwt(),
         horas_token=int(os.getenv("HORAS_TOKEN", "8")),

@@ -32,7 +32,7 @@ O Render recompila a cada push na `main`.
 
 Observações do plano gratuito:
 - O serviço "dorme" depois de um tempo sem acesso, e a primeira visita pode levar cerca de 1 minuto.
-- Há 512 MB de memória. A amostra só é carregada na primeira busca de município.
+- Há 512 MB de memória e pouca CPU. Por isso o risco de cada aluno da amostra vem pronto em `data/risco_municipios.parquet` (a API só lê o arquivo).
 - Se o mapa não aparecer, confira se o token foi passado no build. Em alguns provedores, a variável precisa estar marcada como disponível no build.
 
 ## Banco de dados (usuários e histórico)
@@ -56,5 +56,5 @@ Outras opções com Docker que funcionam do mesmo jeito: Railway, Fly.io e Googl
 ## Atualizar o modelo
 
 1. Treine de novo (`python -m ml.treinar ...`). O resultado vai para `models/`.
-2. Faça commit de `models/pipeline.pkl`, `models/metadados.json` e `models/relatorio_treino.md`.
+2. Faça commit de `models/pipeline.pkl`, `models/metadados.json`, `models/relatorio_treino.md` e `data/risco_municipios.parquet` (o treino gera esse arquivo; para refazer só ele: `python -m ml.risco_municipios`). Sem ele atualizado, a busca de município fica lenta e pode derrubar o servidor do Render.
 3. Depois do merge na `main`, o deploy usa o modelo novo.
