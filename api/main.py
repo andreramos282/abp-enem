@@ -42,7 +42,9 @@ from .traducoes import Idioma
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     config = carregar_configuracao()
-    app.state.preditor = criar_preditor(config.modo_preditor, config.pasta_modelo, config.caminho_amostra)
+    app.state.preditor = criar_preditor(
+        config.modo_preditor, config.pasta_modelo, config.caminho_amostra, config.caminho_risco
+    )
     app.state.opcoes = {"pt": montar_opcoes("pt"), "en": montar_opcoes("en")}
     app.state.config = config
     app.state.banco = Banco(config.url_banco)

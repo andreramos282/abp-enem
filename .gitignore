@@ -3,6 +3,7 @@ data/*
 !data/README.md
 # A amostra (8 MB) vai para o git: é dado público e permite publicar o sistema completo.
 !data/amostra_enem_2023.parquet
+!data/risco_municipios.parquet
 *.csv
 *.zip
 

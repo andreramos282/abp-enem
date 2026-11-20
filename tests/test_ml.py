@@ -130,3 +130,32 @@ def test_teste_temporal_em_outro_ano(modelo_treinado, tmp_path):
     resultado = json.loads((pasta / "teste_temporal_2022.json").read_text(encoding="utf-8"))
     assert resultado["ano"] == 2022 and resultado["teste"]["auc"] > 0.6
     assert (tmp_path / "graficos" / "12_teste_temporal_2022.png").is_file()
+
+
+def test_risco_precalculado_igual_ao_calculado_na_api(modelo_treinado, tmp_path, monkeypatch):
+    pasta, amostra, _ = modelo_treinado
+    risco = tmp_path / "risco_municipios.parquet"
+    subprocess.run(
+        [
+            sys.executable,
+            "-m",
+            "ml.risco_municipios",
+            "--modelo",
+            str(pasta),
+            "--amostra",
+            str(amostra),
+            "--saida",
+            str(risco),
+        ],
+        check=True,
+    )
+    from api.modelo import PreditorModelo
+
+    calculado = PreditorModelo(pasta, amostra).analisar_municipio("Jacareí", "SP")
+    lido = PreditorModelo(pasta, None, risco).analisar_municipio("Jacareí", "SP")
+    assert lido.estatisticas_gerais == calculado.estatisticas_gerais
+    assert lido.por_rede == calculado.por_rede
+
+    outro = PreditorModelo(pasta, amostra, risco)
+    outro.nome = "outro-modelo"  # arquivo de outro modelo: a API ignora e calcula
+    assert outro.analisar_municipio("Jacareí", "SP").estatisticas_gerais == calculado.estatisticas_gerais

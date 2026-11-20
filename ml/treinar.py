@@ -467,6 +467,13 @@ def main() -> None:
     salvar_resultados(args.saida, melhor.pipeline, metadados)
     print(f"Salvo em {args.saida}/pipeline.pkl, metadados.json e relatorio_treino.md")
 
+    # Risco de cada aluno da amostra para o painel do município (a API só lê o arquivo).
+    risco = args.amostra.with_name("risco_municipios.parquet")
+    if args.amostra.suffix == ".parquet" and args.saida == Path("models"):
+        from .risco_municipios import gerar as gerar_risco
+
+        print(f"Risco por aluno salvo em {gerar_risco(args.saida, args.amostra, risco)}")
+
     try:
         from .graficos import gerar_graficos
     except ImportError:
