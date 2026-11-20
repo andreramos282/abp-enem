@@ -210,6 +210,26 @@ class ItemHistorico(BaseModel):
 
 
 # ---------------------------------------------------------------------------
+# GET /api/modelo
+# ---------------------------------------------------------------------------
+class ResumoModelo(BaseModel):
+    """Números do modelo em uso, para a página "Sobre o modelo". Campos None no modo simulado."""
+
+    modelo: str
+    simulado: bool
+    treinado_em: str | None = None
+    ano_dados: int | None = None
+    alunos_amostra: int | None = None
+    corte_media: float | None = None
+    auc_teste: float | None = None
+    recall_teste: float | None = None
+    auc_outro_ano: float | None = None
+    outro_ano: int | None = None
+    calibracao_erro_medio: float | None = None
+    importancia: dict[str, float] = Field(default_factory=dict, description="Média do |SHAP| por grupo, em p.p.")
+
+
+# ---------------------------------------------------------------------------
 # GET /api/opcoes
 # ---------------------------------------------------------------------------
 class Opcao(BaseModel):

@@ -28,9 +28,7 @@ export function Login() {
         return
       }
       salvarSessao(sessao)
-      // Mesmo já estando em outra rota, força o App a desenhar de novo com a sessão.
-      if (window.location.hash === '#/visao-geral') window.dispatchEvent(new HashChangeEvent('hashchange'))
-      else navegar('visao-geral')
+      if (window.location.hash === '#/login') navegar('visao-geral')
     } catch (e) {
       setErro(e instanceof Error ? e.message : t.erros.servidor)
     } finally {

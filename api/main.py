@@ -33,6 +33,7 @@ from .schemas import (
     RespostaLogin,
     RespostaLote,
     ResultadoLote,
+    ResumoModelo,
     UsuarioPublico,
 )
 from .servico import criar_preditor
@@ -143,6 +144,12 @@ def apagar_analise(analise_id: int, usuario: Annotated[Usuario, Depends(usuario_
     if not apagadas:
         raise HTTPException(status_code=404, detail="Análise não encontrada.")
     return Response(status_code=204)
+
+
+@app.get("/api/modelo", response_model=ResumoModelo)
+def resumo_modelo() -> ResumoModelo:
+    """Números do modelo em uso (qualidade, dados, variáveis que mais pesam)."""
+    return app.state.preditor.resumo()
 
 
 @app.get("/api/opcoes", response_model=OpcoesFormulario)

@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useState, type FormEvent } from 'react'
-import { Check, Info, Lock } from 'lucide-react'
+import { Check, Info, Lock, ShieldCheck } from 'lucide-react'
 import { buscarOpcoes, preverRisco, type Campo, type Perfil } from '../lib/api'
 import { salvarAnalise } from '../lib/armazenamento'
 import { montarPerfil, rotulosDoPerfil, type Valores } from '../lib/perfil'
@@ -25,7 +25,8 @@ const CAMPOS_POR_SECAO: Array<Array<keyof Perfil>> = [
   ['rede_escola', 'localizacao_escola', 'uf_escola'],
   ['computador', 'internet'],
 ]
-const OBRIGATORIOS = CAMPOS_POR_SECAO.flat()
+// Sexo é opcional (dado sensível); cor/raça tem a opção "Prefiro não declarar".
+const OBRIGATORIOS: Array<keyof Perfil> = CAMPOS_POR_SECAO.flat().filter((campo) => campo !== 'sexo')
 const SEGMENTADOS: Array<keyof Perfil> = ['internet', 'localizacao_escola', 'sexo']
 
 export function NovaAnalise() {
@@ -50,7 +51,7 @@ export function NovaAnalise() {
   }, [carregar])
 
   const porCampo = useMemo(() => new Map(campos?.map((c) => [c.campo, c] as const)), [campos])
-  const preenchidas = CAMPOS_POR_SECAO.map((lista) => lista.every((c) => valores[c]))
+  const preenchidas = CAMPOS_POR_SECAO.map((lista) => lista.every((c) => !OBRIGATORIOS.includes(c) || valores[c]))
 
   function alterar(campo: keyof Perfil, valor: string) {
     setValores((v) => ({ ...v, [campo]: valor }))
@@ -156,6 +157,20 @@ export function NovaAnalise() {
                       return <CampoSelecao key={nome} {...props} opcoes={campo.opcoes} />
                     })}
                   </div>
+                  {i === 0 && (
+                    <div className="flex gap-3 rounded-xl bg-superficie-2 p-4 text-[13px] leading-relaxed text-texto-2">
+                      <ShieldCheck className="mt-0.5 size-4 shrink-0 text-primaria-texto" aria-hidden />
+                      <p>
+                        <strong className="font-semibold text-texto">{t.form.lgpdTitulo}.</strong> {t.form.lgpdTexto}{' '}
+                        <a
+                          href="#/sobre"
+                          className="font-semibold text-primaria-texto underline-offset-2 hover:underline"
+                        >
+                          {t.form.lgpdLink}
+                        </a>
+                      </p>
+                    </div>
+                  )}
                 </fieldset>
               ))}
 

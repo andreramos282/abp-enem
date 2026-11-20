@@ -8,19 +8,21 @@ import { NovaAnalise } from './pages/NovaAnalise'
 import { Resultado } from './pages/Resultado'
 import { Lote } from './pages/Lote'
 import { Historico } from './pages/Historico'
-import { lerSessao } from './lib/sessao'
+import { Sobre } from './pages/Sobre'
+import { useSessao } from './lib/sessao'
 import { VisaoGeral } from './pages/VisaoGeral'
 
 function Rotas() {
   const rota = useRota()
   const { t } = usePreferencias()
+  const sessao = useSessao()
 
   useEffect(() => {
     document.title = `${t.titulos[rota]} · ${t.marca}`
   }, [rota, t])
 
   // Sem login, qualquer página leva à tela de entrada.
-  if (rota === 'login' || !lerSessao()) return <Login />
+  if (rota === 'login' || !sessao) return <Login />
 
   return (
     <Layout rota={rota}>
@@ -29,6 +31,7 @@ function Rotas() {
       {rota === 'resultado' && <Resultado />}
       {rota === 'lote' && <Lote />}
       {rota === 'historico' && <Historico />}
+      {rota === 'sobre' && <Sobre />}
     </Layout>
   )
 }

@@ -33,3 +33,6 @@ known-first-party = ["api", "ml", "tests"]
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 pythonpath = ["."]
+# Os testes de ponta a ponta (navegador) ficam de fora do pytest comum: rode com  pytest -m e2e
+addopts = "-m 'not e2e'"
+markers = ["e2e: testes de ponta a ponta com navegador (precisam do site compilado e do Playwright)"]

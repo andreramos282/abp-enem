@@ -149,3 +149,9 @@ def test_municipio_traz_comparacao_e_rede():
         dados = c.post("/api/municipios/analytics?idioma=en", json={"municipio": "Jacareí", "uf": "SP"}).json()
     assert dados["comparacao"]["percentual_risco_brasil"] > 0
     assert dados["por_rede"] and dados["por_rede"][0]["rotulo"]
+
+
+def test_resumo_do_modelo_simulado():
+    with cliente() as c:
+        resumo = c.get("/api/modelo").json()
+    assert resumo["simulado"] is True and resumo["modelo"] == "mock"
