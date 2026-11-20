@@ -41,6 +41,9 @@ class PreditorModelo:
         self.nome = self.metadados.get("versao", "modelo")
         self.entradas: list[str] = self.metadados["entradas"]
         self.referencia: dict = self.metadados["referencia"]
+        equidade = self.metadados.get("equidade") or {}
+        self.limiar_geral: float | None = self.metadados.get("limiar_decisao")
+        self.limiares_cor: dict[str, float] = equidade.get("limiares_cor_raca", {})
         self.caminho_amostra = caminho_amostra
         self._amostra: pd.DataFrame | None = None
 
@@ -84,8 +87,16 @@ class PreditorModelo:
             probabilidade_risco=round(probabilidade, 4),
             nivel_risco=classificar(probabilidade),
             fatores=fatores[:MAX_FATORES],
+            acompanhamento_recomendado=self._acompanhamento(probabilidade, perfil),
             modelo=self.nome,
         )
+
+    def _acompanhamento(self, probabilidade: float, perfil: PerfilAluno) -> bool | None:
+        """Compara com o limiar do grupo de cor/raça (equidade) ou, sem ele, com o limiar geral."""
+        if self.limiar_geral is None:
+            return None
+        cor = str(perfil.cor_raca if perfil.cor_raca is not None else 0)
+        return probabilidade >= self.limiares_cor.get(cor, self.limiar_geral)
 
     # ------------------------------------------------------------------ município
     def _carregar_amostra(self) -> pd.DataFrame:

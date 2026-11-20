@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { BookOpen, ClipboardPlus, Home, Monitor, Printer, School, Users, Wifi } from 'lucide-react'
+import { BookOpen, ClipboardPlus, Home, Monitor, Printer, School, UserCheck, Users, Wifi } from 'lucide-react'
 import { buscarOpcoes, formatarNumero, preverRisco, type Fator, type NivelRisco } from '../lib/api'
 import { lerAnalise, salvarAnalise, type UltimaAnalise } from '../lib/armazenamento'
 import type { Textos } from '../lib/i18n'
@@ -152,6 +152,28 @@ export function Resultado() {
           <Medidor valor={previsao.probabilidade_risco} nivel={previsao.nivel_risco} />
           <BadgeRisco nivel={previsao.nivel_risco} />
           <p className="text-center text-xs leading-relaxed text-suave">{t.resultado.explicacao}</p>
+          {previsao.acompanhamento_recomendado != null && (
+            <p
+              className={cx(
+                'flex w-full items-start gap-2 rounded-lg px-3 py-2.5 text-xs leading-relaxed',
+                previsao.acompanhamento_recomendado ? 'bg-risco-alto-claro' : 'bg-superficie-2',
+              )}
+            >
+              <UserCheck
+                className={cx(
+                  'mt-0.5 size-4 shrink-0',
+                  previsao.acompanhamento_recomendado ? 'text-risco-alto-texto' : 'text-suave',
+                )}
+                aria-hidden
+              />
+              <span>
+                <strong className="block font-semibold text-texto">
+                  {previsao.acompanhamento_recomendado ? t.resultado.acompanhamentoSim : t.resultado.acompanhamentoNao}
+                </strong>
+                <span className="text-suave">{t.resultado.acompanhamentoAjuda}</span>
+              </span>
+            </p>
+          )}
         </Cartao>
 
         <Cartao className="p-5 sm:p-7">

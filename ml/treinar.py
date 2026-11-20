@@ -49,6 +49,7 @@ from sklearn.neural_network import MLPClassifier
 from sklearn.pipeline import Pipeline
 from sklearn.tree import DecisionTreeClassifier
 
+from . import avaliacao as av
 from . import colunas_2023 as c
 from .features import ENTRADAS, construir_pipeline, renomear_microdados
 from .preparar_dados import carregar
@@ -96,7 +97,7 @@ def limiar_maior_f1(y: np.ndarray, prob: np.ndarray) -> float:
     return float(limiares[int(np.argmax(f1[:-1]))])
 
 
-def metricas(y: np.ndarray, prob: np.ndarray, limiar: float) -> dict:
+def metricas(y: np.ndarray, prob: np.ndarray, limiar: float | np.ndarray) -> dict:
     pred = (prob >= limiar).astype(int)
     vn, fp, fn, vp = confusion_matrix(y, pred, labels=[0, 1]).ravel()
     return {
@@ -112,7 +113,7 @@ def metricas(y: np.ndarray, prob: np.ndarray, limiar: float) -> dict:
     }
 
 
-def analise_vies(vies: pd.DataFrame, y: np.ndarray, prob: np.ndarray, limiar: float) -> dict:
+def analise_vies(vies: pd.DataFrame, y: np.ndarray, prob: np.ndarray, limiar: float | np.ndarray) -> dict:
     pred = prob >= limiar
     resultado: dict[str, dict] = {}
     for coluna in vies.columns:
@@ -272,10 +273,15 @@ def testes_iniciais(d: Divisao, vies: pd.DataFrame, nome: str, regiao: str) -> d
         f"  Cor/raça e sexo: AUC com {sensiveis_resultado['com']['teste']['auc']:.3f} · "
         f"sem {sensiveis_resultado['sem']['teste']['auc']:.3f} · {time.time() - inicio:.0f}s"
     )
+    print("  Com e sem cada região...")
+    todas = av.com_e_sem_cada_regiao(d, lambda X, y: _ajustar(nome, params, X, y))
+    for reg, v in todas.items():
+        print(f"    {reg:<13} AUC com {v['auc_com']:.3f} · sem {v['auc_sem']:.3f}")
     return {
         "modelo": nome,
         "parametros": {k.replace("modelo__", ""): (list(v) if isinstance(v, tuple) else v) for k, v in params.items()},
         "regiao": regiao_resultado,
+        "todas_regioes": todas,
         "cor_sexo": sensiveis_resultado,
     }
 
@@ -320,6 +326,34 @@ def treinar_modelo(nome: str, d: Divisao, amostra_grid: int) -> ModeloTreinado:
     return ModeloTreinado(final, busca.best_params_, limiar, prob_te, resultado)
 
 
+def avaliacoes_extras(d: Divisao, vies: pd.DataFrame, melhor: ModeloTreinado, com_shap: bool = True) -> dict:
+    """Equidade (limiar por cor/raça), calibração e importância das variáveis (SHAP) do modelo escolhido."""
+    prob_val = melhor.pipeline.predict_proba(d.X_validacao)[:, 1]
+    cor_val = vies.loc[d.X_validacao.index, "cor_raca"]
+    vies_teste = vies.loc[d.idx_teste].reset_index(drop=True)
+    limiares = av.limiares_equidade(d.y_validacao, prob_val, cor_val, melhor.limiar)
+    limiar_linhas = av.limiar_por_linha(vies_teste["cor_raca"], limiares, melhor.limiar)
+    extras = {
+        "equidade": {
+            "criterio": "mesmo recall para todos os grupos de cor/raça (limiar por grupo escolhido na validação)",
+            "limiar_geral": round(melhor.limiar, 4),
+            "limiares_cor_raca": limiares,
+            "teste": metricas(d.y_teste, melhor.prob_teste, limiar_linhas),
+            "vies": analise_vies(vies_teste, d.y_teste, melhor.prob_teste, limiar_linhas),
+        },
+        "calibracao": av.calibracao(d.y_teste, melhor.prob_teste),
+        "importancia_shap": None,
+    }
+    if com_shap:
+        try:
+            inicio = time.time()
+            extras["importancia_shap"] = av.importancia_shap(melhor.pipeline, d.X_teste)
+            print(f"SHAP calculado em {time.time() - inicio:.0f}s")
+        except ImportError:
+            print("shap não instalado: importância das variáveis não calculada (pip install -r requirements-dev.txt).")
+    return extras
+
+
 def montar_metadados(
     escolhido: str,
     d: Divisao,
@@ -327,6 +361,7 @@ def montar_metadados(
     treinados: dict[str, ModeloTreinado],
     vies: dict,
     testes: dict | None,
+    extras: dict | None = None,
 ) -> dict:
     agora = datetime.now(UTC)
     melhor = treinados[escolhido]
@@ -355,6 +390,7 @@ def montar_metadados(
         "analise_vies": vies,
         "testes_iniciais": testes,
         "curvas_roc": {nome: curva_roc(d.y_teste, t.prob_teste) for nome, t in treinados.items()},
+        **(extras or {}),
     }
 
 
@@ -390,6 +426,7 @@ def ler_argumentos() -> argparse.Namespace:
         "--modelo-testes", choices=list(MODELOS), default="mlp", help="Modelo usado nos testes iniciais."
     )
     parser.add_argument("--sem-testes", action="store_true", help="Pula os testes iniciais.")
+    parser.add_argument("--sem-shap", action="store_true", help="Pula o cálculo do SHAP (mais rápido).")
     parser.add_argument(
         "--graficos", type=Path, default=Path("docs/resultados"), help="Pasta dos gráficos (precisa do matplotlib)."
     )
@@ -425,7 +462,8 @@ def main() -> None:
         vies_teste = vies.loc[divisao.idx_teste].reset_index(drop=True)
         vies_resultado = analise_vies(vies_teste, divisao.y_teste, melhor.prob_teste, melhor.limiar)
 
-    metadados = montar_metadados(escolhido, divisao, len(X), treinados, vies_resultado, testes)
+    extras = avaliacoes_extras(divisao, vies, melhor, com_shap=not args.sem_shap) if not vies.empty else None
+    metadados = montar_metadados(escolhido, divisao, len(X), treinados, vies_resultado, testes, extras)
     salvar_resultados(args.saida, melhor.pipeline, metadados)
     print(f"Salvo em {args.saida}/pipeline.pkl, metadados.json e relatorio_treino.md")
 
@@ -504,6 +542,79 @@ def _relatorio_testes(t: dict | None) -> list[str]:
     return [*linhas, ""]
 
 
+def _relatorio_extras(m: dict) -> list[str]:
+    linhas: list[str] = []
+    regioes = (m.get("testes_iniciais") or {}).get("todas_regioes")
+    if regioes:
+        linhas += [
+            "## Treino com e sem cada região",
+            "",
+            _linha_tabela(
+                "Região", "Alunos no teste", "AUC com", "AUC sem", "Risco real", "Previsto com", "Previsto sem"
+            ),
+            _linha_tabela(*["---"] * 7),
+        ]
+        for reg, v in regioes.items():
+            linhas.append(
+                _linha_tabela(
+                    reg,
+                    _milhar(v["n_teste"]),
+                    v["auc_com"],
+                    v["auc_sem"],
+                    _pct(v["risco_real"]),
+                    _pct(v["previsto_com"]),
+                    _pct(v["previsto_sem"]),
+                )
+            )
+        linhas.append("")
+    eq = m.get("equidade")
+    if eq:
+        antes, depois = m["analise_vies"].get("cor_raca", {}), eq["vies"].get("cor_raca", {})
+        linhas += [
+            "## Equidade: limiar por cor/raça",
+            "",
+            f"Critério: {eq['criterio']}. Limiar geral: {eq['limiar_geral']}.",
+            "",
+            _linha_tabela(
+                "Grupo", "Limiar", "Recall antes", "Recall depois", "Falso positivo antes", "Falso positivo depois"
+            ),
+            _linha_tabela(*["---"] * 6),
+        ]
+        for g, v in depois.items():
+            a = antes.get(g, {})
+            linhas.append(
+                _linha_tabela(
+                    c.COR_RACA.get(g, g),
+                    eq["limiares_cor_raca"].get(g, eq["limiar_geral"]),
+                    _pct(a.get("recall")),
+                    _pct(v["recall"]),
+                    _pct(a.get("falso_positivo")),
+                    _pct(v["falso_positivo"]),
+                )
+            )
+        t = eq["teste"]
+        linhas += ["", f"Geral com os limiares por grupo: F1 {t['f1']} · recall {_pct(t['recall'])}.", ""]
+    cal = m.get("calibracao")
+    if cal:
+        linhas += [
+            "## Calibração",
+            "",
+            f"Brier {cal['brier']} · diferença média entre o risco previsto e o real: {_pct(cal['erro_medio'])}.",
+            "",
+        ]
+    imp = m.get("importancia_shap")
+    if imp:
+        linhas += [
+            f"## Importância das variáveis (SHAP, {imp['alunos']} alunos do teste)",
+            "",
+            _linha_tabela("Variável", "Efeito médio (p.p.)"),
+            _linha_tabela("---", "---"),
+            *[_linha_tabela(k, v) for k, v in imp["pontos_percentuais"].items()],
+            "",
+        ]
+    return linhas
+
+
 def relatorio(m: dict) -> str:
     """Resumo do treino em Markdown, pronto para o relatório da sprint."""
     a = m["amostra"]
@@ -527,6 +638,7 @@ def relatorio(m: dict) -> str:
         linhas.append(
             _linha_tabela(nome, r["auc_validacao_cruzada"], t["auc"], t["f1"], t["precisao"], t["recall"], r["limiar"])
         )
+    linhas += ["", *_relatorio_extras(m)]
     if m.get("analise_vies"):
         linhas += ["", "## Análise de viés (modelo escolhido, teste)", ""]
         for coluna, grupos in m["analise_vies"].items():

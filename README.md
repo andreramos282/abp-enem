@@ -49,6 +49,24 @@ O modelo funciona numa região que nunca viu (AUC cai só 0,005), mas superestim
 
 Cor/raça e sexo melhoram a AUC em só **0,004**, e o modelo passa a apontar por engano muito mais alunos pretos, pardos e indígenas que não estão em risco. Isso precisa ser declarado no relatório: são dados sensíveis (LGPD, art. 11) e o resultado deve apoiar a decisão pedagógica, nunca rotular o aluno.
 
+**Treino com e sem cada região** (AUC nos alunos da região):
+
+| Região | Com a região | Sem a região |
+| --- | --- | --- |
+| Norte | 0,765 | 0,762 |
+| Nordeste | 0,773 | 0,768 |
+| Centro-Oeste | 0,770 | 0,768 |
+| Sudeste | 0,769 | 0,765 |
+| Sul | 0,758 | 0,755 |
+
+O modelo generaliza para qualquer região (perde no máximo 0,005 de AUC), mas erra o nível de risco de quem não viu: sem o Sudeste no treino, prevê 20% de alunos em risco lá, contra 15% reais.
+
+### Equidade, calibração e explicabilidade
+
+- **Limiar por cor/raça (equidade):** com um limiar único, o modelo encontrava 42% dos alunos brancos em risco e 81% dos pretos, e apontava por engano 13% dos brancos e 54% dos pretos. Com um limiar por grupo, escolhido na validação para que todos tenham o mesmo recall (igualdade de oportunidade), o recall fica entre 67% e 72% em todos os grupos e o falso positivo entre 28% e 39%. O site usa esses limiares no aviso de "acompanhamento recomendado".
+- **Calibração:** o risco previsto bate com o real (diferença média de 1,1 ponto percentual, Brier 0,156). Quando o site mostra 30% de risco, cerca de 30% desses alunos estão de fato no quartil inferior. Não foi preciso recalibrar.
+- **Importância das variáveis (SHAP):** as que mais pesam são renda per capita, rede da escola, faixa etária e computador em casa. Cor/raça vem em 5º lugar e sexo quase não pesa.
+
 ### Comparação dos modelos (com cor/raça e sexo)
 
 | Modelo | AUC (teste) | F1 | Recall |
@@ -119,6 +137,9 @@ Se existir um modelo treinado em `models/pipeline.pkl`, a API usa o modelo. Sen�
    ```
 4. O resultado fica em `models/`: `pipeline.pkl` (modelo), `metadados.json` (corte, métricas, testes iniciais, análise de viés) e `relatorio_treino.md` (tabelas prontas para o relatório da sprint). Os gráficos vão para `docs/resultados/` (refaça só os gráficos com `python -m ml.graficos`).
 5. Reinicie a API: ela passa a usar o modelo treinado automaticamente.
+6. (Opcional) Teste em outro ano: baixe os microdados do ENEM 2022 e rode
+   `python -m ml.teste_temporal data/MICRODADOS_ENEM_2022.csv --ano 2022`. O resultado vai para
+   `models/teste_temporal_2022.json` e o gráfico para `docs/resultados/`.
 
 Para testar o fluxo sem os dados reais: `python -m tests.sintetico data/MICRODADOS_ENEM_2023_SINTETICO.csv` gera um arquivo falso no mesmo layout.
 
@@ -167,4 +188,5 @@ Veja o [CONTRIBUTING.md](CONTRIBUTING.md): preparação do ambiente, padrão de 
 - [x] Imagem Docker com site + API + modelo
 - [ ] Publicar (ver `docs/deploy.md`)
 - [x] Integração do modelo real na API (com explicação dos fatores)
-- [ ] Análise de viés e explicabilidade
+- [x] Análise de viés e explicabilidade (limiar por cor/raça, calibração e SHAP)
+- [ ] Teste no ENEM 2022 (script pronto: `ml/teste_temporal.py`; falta rodar com os microdados de 2022)

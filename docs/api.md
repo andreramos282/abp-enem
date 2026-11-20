@@ -83,6 +83,8 @@ Resposta:
 ```
 - `nivel_risco`: `alto` (≥ 50%), `medio` (≥ 25%), `baixo` (< 25%).
 - `impacto`: pontos percentuais. Positivo aumenta o risco; negativo reduz.
+- `acompanhamento_recomendado`: `true` se a probabilidade passa do limiar de acompanhamento. O limiar é ajustado por
+  cor/raça para que todos os grupos tenham o mesmo recall (ver `docs/resultados/09_equidade_cor_raca.png`). `null` no mock.
 
 ## `POST /api/municipios/analytics`
 Mesmo formato do protótipo do mapa (EduPredict AI).

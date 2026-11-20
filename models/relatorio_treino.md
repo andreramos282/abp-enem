@@ -43,6 +43,55 @@ Falso positivo por cor/raça (com → sem):
 | gradient_boosting | 0.7668 | 0.765 | 0.5288 | 0.4253 | 0.6989 | 0.2744 |
 | mlp | 0.7635 | 0.7631 | 0.5251 | 0.4267 | 0.6824 | 0.2647 |
 
+## Treino com e sem cada região
+
+| Região | Alunos no teste | AUC com | AUC sem | Risco real | Previsto com | Previsto sem |
+| --- | --- | --- | --- | --- | --- | --- |
+| Norte | 4.684 | 0.7652 | 0.7616 | 32.5% | 32.0% | 29.0% |
+| Nordeste | 17.607 | 0.7734 | 0.768 | 29.0% | 30.0% | 32.3% |
+| Centro-Oeste | 5.110 | 0.7701 | 0.7679 | 22.0% | 23.1% | 21.1% |
+| Sudeste | 20.152 | 0.7688 | 0.7649 | 15.2% | 15.9% | 20.2% |
+| Sul | 7.417 | 0.7579 | 0.7549 | 16.7% | 17.6% | 18.7% |
+
+## Equidade: limiar por cor/raça
+
+Critério: mesmo recall para todos os grupos de cor/raça (limiar por grupo escolhido na validação). Limiar geral: 0.2647.
+
+| Grupo | Limiar | Recall antes | Recall depois | Falso positivo antes | Falso positivo depois |
+| --- | --- | --- | --- | --- | --- |
+| Não declarado | 0.3266 | 83.9% | 70.9% | 42.3% | 31.6% |
+| Branca | 0.1766 | 41.8% | 67.0% | 13.3% | 29.9% |
+| Preta | 0.3296 | 81.2% | 66.6% | 53.8% | 38.0% |
+| Parda | 0.3139 | 78.6% | 67.8% | 46.6% | 35.3% |
+| Amarela | 0.3494 | 85.1% | 71.5% | 39.8% | 27.5% |
+| Indígena | 0.4749 | 97.4% | 71.2% | 82.2% | 38.8% |
+
+Geral com os limiares por grupo: F1 0.5072 · recall 67.5%.
+
+## Calibração
+
+Brier 0.1564 · diferença média entre o risco previsto e o real: 1.1%.
+
+## Importância das variáveis (SHAP, 400 alunos do teste)
+
+| Variável | Efeito médio (p.p.) |
+| --- | --- |
+| Renda per capita | 4.66 |
+| Rede da escola | 4.47 |
+| Faixa etária | 3.15 |
+| Computador | 2.82 |
+| Cor/raça | 2.61 |
+| Bens da casa | 2.35 |
+| Localização da escola | 1.91 |
+| Ocupação do pai | 1.68 |
+| Escolaridade do pai | 1.4 |
+| Região | 1.34 |
+| Escolaridade da mãe | 1.18 |
+| Ocupação da mãe | 1.01 |
+| Sexo | 0.68 |
+| Internet | 0.61 |
+
+
 ## Análise de viés (modelo escolhido, teste)
 
 **cor_raca**
