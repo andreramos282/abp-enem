@@ -1,0 +1,25 @@
+# Mantém o site do Render acordado: o plano gratuito "dorme" depois de 15 minutos sem acesso
+# e a primeira visita depois disso demora cerca de 1 minuto.
+#
+# Para ligar: em Settings → Secrets and variables → Actions → Variables, crie a variável
+# URL_SITE com o endereço do site (ex.: https://abp-enem.onrender.com). Sem ela, nada acontece.
+#
+# Observações: o GitHub pode atrasar execuções agendadas em alguns minutos e desliga os
+# agendamentos de repositórios sem commits há 60 dias. O plano gratuito do Render tem 750 horas
+# por mês, suficiente para um serviço ligado o mês inteiro.
+name: Manter o site acordado
+
+on:
+  schedule:
+    - cron: "*/10 * * * *"
+  workflow_dispatch:
+
+jobs:
+  ping:
+    name: Acessa /api/health
+    if: vars.URL_SITE != ''
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Ping
+        run: curl -sS --retry 3 --retry-delay 20 --max-time 90 "${{ vars.URL_SITE }}/api/health"

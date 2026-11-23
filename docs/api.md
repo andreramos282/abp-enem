@@ -22,6 +22,11 @@ Só os textos mudam (rótulos e descrições dos fatores); códigos e números s
 { "status": "ok", "modelo": "mock" }
 ```
 
+## `GET /api/modelo`
+Resumo do modelo em uso, para a página "Sobre o modelo": versão, data do treino, alunos da amostra, corte da média,
+AUC e recall no teste, AUC no outro ano testado (2022), erro médio da calibração e importância das variáveis (SHAP,
+em pontos percentuais). No modo simulado, `simulado: true` e os números vêm vazios.
+
 ## `GET /api/opcoes?idioma=pt`
 Lista os campos do formulário "Nova análise" com suas opções.
 ```json

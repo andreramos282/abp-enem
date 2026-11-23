@@ -11,7 +11,7 @@ from __future__ import annotations
 from pathlib import Path
 from typing import Protocol
 
-from .schemas import AnaliseMunicipio, PerfilAluno, Previsao
+from .schemas import AnaliseMunicipio, PerfilAluno, Previsao, ResumoModelo
 from .traducoes import Idioma
 
 
@@ -21,6 +21,8 @@ class Preditor(Protocol):
     def prever(self, perfil: PerfilAluno, idioma: Idioma = "pt") -> Previsao: ...
 
     def prever_lote(self, perfis: list[PerfilAluno]) -> list[Previsao]: ...
+
+    def resumo(self) -> ResumoModelo: ...
 
     def analisar_municipio(self, municipio: str, uf: str, idioma: Idioma = "pt") -> AnaliseMunicipio: ...
 

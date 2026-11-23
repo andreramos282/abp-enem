@@ -1,5 +1,14 @@
 import type { ReactNode } from 'react'
-import { ClipboardPlus, FileSpreadsheet, FileText, GraduationCap, History, LayoutGrid, LogOut } from 'lucide-react'
+import {
+  ClipboardPlus,
+  FileSpreadsheet,
+  FileText,
+  GraduationCap,
+  History,
+  Info,
+  LayoutGrid,
+  LogOut,
+} from 'lucide-react'
 import { navegar, type Rota } from '../lib/rotas'
 import { lerAnalise } from '../lib/armazenamento'
 import { encerrarSessao, iniciais, lerSessao } from '../lib/sessao'
@@ -12,6 +21,8 @@ interface ItemMenu {
   rotulo: string
   rotuloCurto: string
   icone: typeof LayoutGrid
+  // false: só no menu lateral (no celular fica num botão do cabeçalho)
+  celular?: boolean
 }
 
 export function Logo({ claro = false }: { claro?: boolean }) {
@@ -38,6 +49,7 @@ export function Layout({ rota, children }: { rota: Rota; children: ReactNode }) 
     { rota: 'nova-analise', rotulo: t.nav.novaAnalise, rotuloCurto: t.nav.novaAnaliseCurto, icone: ClipboardPlus },
     { rota: 'lote', rotulo: t.nav.lote, rotuloCurto: t.nav.loteCurto, icone: FileSpreadsheet },
     { rota: 'historico', rotulo: t.nav.historico, rotuloCurto: t.nav.historicoCurto, icone: History },
+    { rota: 'sobre', rotulo: t.nav.sobre, rotuloCurto: t.nav.sobreCurto, icone: Info, celular: false },
   ]
   const usuario = lerSessao()?.usuario
   function sair() {
@@ -106,6 +118,14 @@ export function Layout({ rota, children }: { rota: Rota; children: ReactNode }) 
       <header className="sticky top-0 z-20 flex items-center justify-between gap-2 border-b border-borda bg-superficie/95 px-4 py-3 backdrop-blur print:hidden lg:hidden">
         <Logo />
         <div className="flex items-center gap-1">
+          <a
+            href="#/sobre"
+            className="grid size-9 place-items-center rounded-lg text-suave hover:bg-superficie-2"
+            aria-label={t.nav.sobre}
+            title={t.nav.sobre}
+          >
+            <Info className="size-5" aria-hidden />
+          </a>
           <ControlesPreferencias />
           <button
             type="button"
@@ -128,23 +148,25 @@ export function Layout({ rota, children }: { rota: Rota; children: ReactNode }) 
         aria-label={t.menuPrincipal}
       >
         <div className="mx-auto flex max-w-md">
-          {itens.map(({ rota: destino, rotuloCurto, icone: Icone }) => {
-            const ativo = destino === rota
-            return (
-              <a
-                key={destino}
-                href={`#/${destino}`}
-                aria-current={ativo ? 'page' : undefined}
-                className={cx(
-                  'flex min-h-16 flex-1 flex-col items-center justify-center gap-1 text-[11px]',
-                  ativo ? 'font-semibold text-primaria-texto' : 'font-medium text-suave',
-                )}
-              >
-                <Icone className="size-5" aria-hidden />
-                {rotuloCurto}
-              </a>
-            )
-          })}
+          {itens
+            .filter((item) => item.celular !== false)
+            .map(({ rota: destino, rotuloCurto, icone: Icone }) => {
+              const ativo = destino === rota
+              return (
+                <a
+                  key={destino}
+                  href={`#/${destino}`}
+                  aria-current={ativo ? 'page' : undefined}
+                  className={cx(
+                    'flex min-h-16 flex-1 flex-col items-center justify-center gap-1 text-[11px]',
+                    ativo ? 'font-semibold text-primaria-texto' : 'font-medium text-suave',
+                  )}
+                >
+                  <Icone className="size-5" aria-hidden />
+                  {rotuloCurto}
+                </a>
+              )
+            })}
         </div>
       </nav>
     </div>

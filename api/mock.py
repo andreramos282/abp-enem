@@ -19,6 +19,7 @@ from .schemas import (
     Fator,
     PerfilAluno,
     Previsao,
+    ResumoModelo,
     RiscoPorRede,
 )
 from .traducoes import FATORES, OPCOES, Idioma, formatar_reais
@@ -98,6 +99,9 @@ class PreditorMock:
             fatores=fatores[:6],
             modelo=self.nome,
         )
+
+    def resumo(self) -> ResumoModelo:
+        return ResumoModelo(modelo=self.nome, simulado=True)
 
     def prever_lote(self, perfis: list[PerfilAluno]) -> list[Previsao]:
         return [self.prever(perfil) for perfil in perfis]
